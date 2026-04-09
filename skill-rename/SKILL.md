@@ -58,14 +58,14 @@ description: 为 skill 改名，同时自动检查和更新所有依赖关系。
 
 ### Step 1: 定位 skill 和验证名称
 
-1. 在 `C:\Users\YanQi\.claude\skills\` 中查找目录
+1. 在 `~/.claude/skills/` 中查找目录
 2. 打开对应的 `SKILL.md`，读取 frontmatter 中的 `name:` 字段
 3. 验证提供的 `old_name` 与实际名称匹配
 4. 如果不匹配，报错并停止
 
 ### Step 2: 全局搜索引用
 
-扫描 `C:\Users\YanQi\.claude\skills\` 中的所有 SKILL.md 文件，寻找以下形式的引用：
+扫描 `~/.claude/skills/` 中的所有 SKILL.md 文件，寻找以下形式的引用：
 
 1. **反引号形式**：`` `old_name` ``
 2. **使用 Skill 工具调用**：
@@ -110,7 +110,7 @@ description: 为 skill 改名，同时自动检查和更新所有依赖关系。
 如果 `rename_directory` 为 Y：
 
 1. **重命名目录**：
-   - 获取当前目录路径（例如 `C:\Users\YanQi\.claude\skills\old_name\`）
+   - 获取当前目录路径（例如 `~/.claude/skills/old_name/`）
    - 创建新目录或移动现有目录到新名称（`new_name\`）
 
 2. **更新配置文件中的路径引用**：

@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import List, Dict, Tuple
 import yaml
 
-SKILLS_DIR = r"C:\Users\YanQi\.claude\skills"
+SKILLS_DIR = os.path.join(Path.home(), ".claude", "skills")
 
 class SkillRenamer:
     def __init__(self, old_name: str, new_name: str, rename_directory: bool = True):
