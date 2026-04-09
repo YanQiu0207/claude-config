@@ -1,0 +1,11 @@
+# 敏感信息模式（每行一个正则，支持 grep -E 语法）
+# 复制此文件为 sensitive-patterns 并填入你的个人信息
+#
+# cp .githooks/sensitive-patterns.example .githooks/sensitive-patterns
+
+# 示例：
+# C:\\Users\\YourName
+# /home/yourname
+# YourName
+# your\.email@example\.com
+# api[_-]?key.*=
