@@ -1,0 +1,67 @@
+{
+  "skill_name": "skill-rename",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我想把 md-image-localize skill 改名为 image-localizer，同时更新所有对它的引用。请完整执行改名流程，包括更新依赖的 markdown-standardize skill。",
+      "expected_output": "成功执行改名，输出详细的变更报告，包括：1) SKILL.md frontmatter 已更新; 2) markdown-standardize 中的引用已更新; 3) YAML 验证通过; 4) 目录已重命名",
+      "files": [],
+      "expectations": [
+        "md-image-localize skill 的 SKILL.md frontmatter 中 name 字段已改为 image-localizer",
+        "markdown-standardize 的 SKILL.md 中引用已从 `md-image-localize` 改为 `image-localizer`",
+        "所有 YAML frontmatter 验证通过",
+        "生成的变更报告清晰列出了修改的文件和具体改动",
+        "如果目录重命名，新目录存在且包含更新后的 SKILL.md"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "检查 markdown-cn 和 markdown-standardize 之间的依赖关系。如果改名 markdown-cn 为 md-typography，应该更新哪些文件？生成一份改名计划但不执行实际修改。",
+      "expected_output": "详细的改名计划，列出所有需要更新的文件和具体改动位置，但所有文件保持原状",
+      "files": [],
+      "expectations": [
+        "识别出 markdown-standardize 依赖 markdown-cn",
+        "找到第 15 行的反引号引用 `markdown-cn`",
+        "计划输出正确且完整",
+        "未对任何文件进行实际修改"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "尝试把 markdown-standardize 改名为一个已存在的 skill 名称（例如 pdf2md），系统应该报错拒绝。",
+      "expected_output": "报错信息明确指出新名称已被使用，拒绝改名，所有文件保持原状",
+      "files": [],
+      "expectations": [
+        "检测到新名称冲突",
+        "输出清晰的错误信息",
+        "所有文件未被修改"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "执行 markdown-cn 改名为 chinese-typography，要求同时重命名目录。检查是否生成备份文件，并验证可以从备份恢复。",
+      "expected_output": "成功改名，生成 .backup 备份文件，提供恢复命令，所有依赖文件已更新",
+      "files": [],
+      "expectations": [
+        "创建了 .backup 备份文件",
+        "目录从 markdown-cn 重命名为 chinese-typography",
+        "SKILL.md frontmatter 中 name 已改为 chinese-typography",
+        "所有其他 skill 文件中的引用已更新",
+        "提供了恢复命令和备份清单",
+        "可以通过备份恢复到改名前的状态"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "模拟改名过程中的失败情况（例如权限不足导致某个文件无法写入），系统应该自动恢复。",
+      "expected_output": "检测到错误，自动从备份恢复，生成失败报告，系统保持一致状态",
+      "files": [],
+      "expectations": [
+        "检测到写入失败",
+        "自动恢复备份文件",
+        "生成包含失败原因的报告",
+        "系统状态恢复到改名前"
+      ]
+    }
+  ]
+}
