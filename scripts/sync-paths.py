@@ -259,19 +259,30 @@ def sync_mappings(mappings: list[SyncMapping], logger: logging.Logger) -> tuple[
 
 
 def update_readme_with_claude(logger: logging.Logger) -> None:
-    """调用 Claude Code CLI 更新 README.md 中的 Skills 和 Agents 列表。"""
+    """调用 Claude Code CLI 全面更新 README.md。"""
     prompt = (
-        "请更新 README.md 中的 Skills 列表和 Agents 列表。\n\n"
-        "具体做法：\n"
-        "1. 扫描 skills/ 目录下每个子目录的 SKILL.md，从 YAML frontmatter 读取 name 和 description\n"
-        "2. 扫描 agents/ 目录下的 .md 文件，从 YAML frontmatter 读取 name 和 description\n"
-        "3. 用读取到的信息更新 README.md 中 '## Skills 列表' 下的表格和 '## Agents 列表' 下的表格\n\n"
-        "规则：\n"
-        "- 只修改这两个表格，不改动 README 的其他任何部分\n"
-        "- 保持现有表格格式（两列：名称加粗、说明）\n"
-        "- 按名称字母顺序排列\n"
-        "- description 过长时取第一句作为说明\n"
-        "- 如果表格内容没有变化，不要修改文件"
+        "全面更新 README.md，使其与仓库当前状态一致。\n\n"
+        "## 信息采集\n\n"
+        "1. 扫描 skills/ 下每个子目录的 SKILL.md，读取 YAML frontmatter 中的 name 和 description\n"
+        "2. 扫描 agents/ 下的 .md 文件，读取 YAML frontmatter 中的 name 和 description\n"
+        "3. 扫描每个 SKILL.md 正文，提取依赖关系：\n"
+        "   - 调用了哪些其他 skill（关键词：Skill 工具、调用 xxx 技能）\n"
+        "   - 调用了哪些 agent（关键词：worker agent、xxx-worker）\n"
+        "   - 引用了 claude_ref/ 下的哪些参考文件（关键词：CLAUDE.md 中的、规范文件）\n"
+        "4. 读取 scripts/sync-pathmap.json 了解实际同步映射配置\n\n"
+        "## 更新范围\n\n"
+        "逐一检查 README.md 中的以下章节，将过时内容更新为采集到的实际信息：\n\n"
+        "- **Skills 列表**：表格内容与扫描结果对齐，按名称排序，description 过长取第一句\n"
+        "- **Agents 列表**：同上\n"
+        "- **目录结构**：与仓库顶层实际目录一致\n"
+        "- **安装方式**：复制命令覆盖所有需要安装的目录（skills、agents、claude_ref 等）\n"
+        "- **依赖关系**：用树状图展示完整依赖链，包括 skill、agent、参考文件三类依赖\n"
+        "- **路径同步脚本**：示例 JSON 与 sync-pathmap.json 的实际格式和字段一致（不要照搬真实路径，用示意性内容）\n\n"
+        "## 规则\n\n"
+        "- 保持 README 现有的章节结构和排版风格\n"
+        "- 不新增、不删除、不重排章节\n"
+        "- 如果某个章节内容已经是最新的，不要修改它\n"
+        "- 如果整个 README 都不需要改动，不要修改文件"
     )
 
     try:
@@ -281,7 +292,7 @@ def update_readme_with_claude(logger: logging.Logger) -> None:
                 "claude",
                 "-p", prompt,
                 "--model", "sonnet",
-                "--allowedTools", "Read,Edit,Glob",
+                "--allowedTools", "Read,Edit,Glob,Grep",
             ],
             cwd=REPO_DIR,
             capture_output=True,

@@ -44,10 +44,12 @@
 git clone <repo-url> claude-config
 cd claude-config
 
-# 一次性复制所有内容
 cp -r skills/* ~/.claude/skills/
 cp -r agents/* ~/.claude/agents/
 cp -r claude_ref/* ~/.claude/claude_ref/
+
+# CLAUDE.md 包含全局指令，本地已有则不要覆盖，请手动合并
+cp -n claude-config/CLAUDE.md ~/.claude/CLAUDE.md
 ```
 
 Windows（PowerShell）：
@@ -59,6 +61,13 @@ cd claude-config
 Copy-Item -Recurse skills\* $env:USERPROFILE\.claude\skills\
 Copy-Item -Recurse agents\* $env:USERPROFILE\.claude\agents\
 Copy-Item -Recurse claude_ref\* $env:USERPROFILE\.claude\claude_ref\
+
+# CLAUDE.md 包含全局指令，本地已有则不要覆盖，请手动合并
+if (-not (Test-Path $env:USERPROFILE\.claude\CLAUDE.md)) {
+    Copy-Item CLAUDE.md $env:USERPROFILE\.claude\CLAUDE.md
+} else {
+    Write-Warning "~/.claude/CLAUDE.md 已存在，请手动合并"
+}
 ```
 
 ### 按需安装
