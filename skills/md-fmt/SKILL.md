@@ -11,6 +11,7 @@ allowed-tools:
   - Grep
   - Glob
   - Write
+model: sonnet
 ---
 
 当此 skill 生效时，回答第一行固定写：Using skill: md-fmt

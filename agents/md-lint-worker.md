@@ -11,6 +11,7 @@ tools:
 skills:
   - md-lint
 permissionMode: bypassPermissions
+model: haiku
 ---
 
 > **⚠ 并发安全**：本代理被 `batch-md-lint` 通过多个并行后台 agent 同时实例化，每个实例处理不同文件。修改时，必须确保不引入共享状态（如全局临时文件、固定名称的中间产物等），否则并发执行会产生冲突。

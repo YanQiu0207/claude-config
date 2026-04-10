@@ -3,6 +3,7 @@ name: batch-md-fmt-v2
 description: |
   批量对多个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。当用户提供多个文件路径或使用通配符（如 `*.md`、`**/*.md`）进行 markdown 标准化时触发。
   与 batch-md-fmt 的区别：使用通用 agent + bypassPermissions 模式，解决后台 agent 权限受限问题。
+model: sonnet
 ---
 
 当此 skill 生效时，回答第一行固定写：Using skill: batch-md-fmt-v2
