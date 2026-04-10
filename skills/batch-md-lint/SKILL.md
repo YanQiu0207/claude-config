@@ -23,6 +23,7 @@ description: |
 ```
 Agent({
   description: "md-lint: {文件名}",
+  subagent_type: "md-lint-worker",
   run_in_background: true,
   prompt: "请使用 Skill 工具调用 md-lint 技能，对文件 {绝对路径} 执行排版检查。"
 })

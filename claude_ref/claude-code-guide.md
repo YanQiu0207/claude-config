@@ -203,11 +203,12 @@ agent: Explore
 
 ## Skill 批量执行设计模式
 
-当一个 skill 需要支持批量（多文件）执行时，采用两层架构：
+当一个 skill 需要支持批量（多文件）执行时，采用三层架构：
 
 ```
 batch-xxx（skill）──调度层
-  └─ xxx（skill）──执行层
+  └─ xxx-worker（agent）──配置层
+       └─ xxx（skill）──执行层
 ```
 
 ### 各层职责
@@ -215,9 +216,18 @@ batch-xxx（skill）──调度层
 | 层级 | 类型 | 职责 |
 | --- | --- | --- |
 | **调度层** `batch-xxx` | Skill | 文件列表展开（Glob）、并行分发 Agent、汇总报告 |
+| **配置层** `xxx-worker` | Agent | 声明 `permissionMode`、`skills` 依赖和工具白名单，作为调度层与执行层的桥梁 |
 | **执行层** `xxx` | Skill | 单文件的实际处理逻辑 |
 
-调度层和执行层分离的好处：单文件 skill 可独立使用，批量 skill 只负责编排，不重复业务逻辑。不需要额外的 worker agent 定义文件——调度层直接通过 Agent 工具发起后台 agent 调用执行层技能即可。
+调度层和执行层分离的好处：单文件 skill 可独立使用，批量 skill 只负责编排，不重复业务逻辑。
+
+### 为什么需要配置层
+
+后台 Agent 需要通过 agent 定义文件提供以下配置，才能可靠地并行调用 skill：
+
+- **`permissionMode: bypassPermissions`**：后台 agent 无法与用户交互，必须跳过权限确认
+- **`skills`**：明确声明可用的 skill 依赖，确保后台 agent 能加载和调用目标 skill
+- **`subagent_type` 路由**：调度层通过 `subagent_type: "xxx-worker"` 指定 agent 类型，系统能正确路由到配置好的 worker agent
 
 ### 调度层模板（`batch-xxx/SKILL.md`）
 
@@ -225,9 +235,11 @@ batch-xxx（skill）──调度层
 
 1. **确定文件列表**：Glob 展开通配符，或逐个确认路径存在
 2. **并行分发**：在同一条消息中发起多个 Agent 调用
+   - `subagent_type: "xxx-worker"`
    - `run_in_background: true`
    - prompt 中写明文件**绝对路径**和要调用的**技能名称**（subagent 是独立上下文，看不到主对话）
    - 同时并行不超过 8 个，超过时分批
+   - **关键**：所有 Agent 调用必须在一条消息中发出，不能逐个发送
 3. **汇总报告**：所有 agent 返回后，用表格汇总结果
 
 Agent 调用示例：
@@ -235,10 +247,38 @@ Agent 调用示例：
 ```
 Agent({
   description: "xxx: file1.md",
+  subagent_type: "xxx-worker",
   run_in_background: true,
   prompt: "请使用 Skill 工具调用 xxx 技能，对文件 /absolute/path/to/file1.md 执行处理。"
 })
 ```
+
+### 配置层模板（`agents/xxx-worker.md`）
+
+```yaml
+---
+name: xxx-worker
+description: |
+  对单个文件执行 xxx 处理，供 batch-xxx 并行调度使用。
+tools:
+  - Read
+  - Edit
+  - Skill
+  # ... 根据执行层 skill 需要的工具添加
+skills:
+  - xxx
+  # ... 如果执行层 skill 会调用其他 skill，也需要在此声明
+permissionMode: bypassPermissions
+---
+
+当被调用时，使用 Skill 工具调用 xxx 技能处理指定的文件。
+```
+
+关键字段说明：
+
+- **`skills`**：必须声明执行层 skill 及其所有下游 skill 的依赖
+- **`permissionMode: bypassPermissions`**：后台 agent 无法与用户交互，需跳过权限确认
+- **`tools`**：需包含执行层 skill 所需的所有工具
 
 ### 并发安全
 
@@ -252,12 +292,13 @@ Agent({
 
 #### 标注义务
 
-凡是会被 batch 调度层通过多个并行后台 agent 同时调用的 skill，都必须在文件中添加并发安全说明，提醒后续修改者不要引入共享状态。
+凡是会被 batch 调度层通过多个并行后台 agent 同时调用的组件，都必须在文件中添加并发安全说明，提醒后续修改者不要引入共享状态。
 
 **需要标注的层级**：
 
 | 层级 | 文件位置 | 说明 |
 | --- | --- | --- |
+| 配置层 agent | `agents/xxx-worker.md` | 被并发实例化，需确保无共享状态 |
 | 执行层 skill | `skills/xxx/SKILL.md` | 实际执行逻辑，最易引入共享状态冲突 |
 | 执行层 skill 调用的下游 skill | 如 `md-img-local` | 被间接并发调用，同样需要标注 |
 
@@ -266,14 +307,14 @@ Agent({
 在 frontmatter 之后、正文开头处添加 blockquote：
 
 ```markdown
-> **⚠ 并发安全**：本技能被 `batch-xxx` 通过多个并行后台 agent 同时调用，每个 agent 处理不同文件。修改本技能时，必须确保不引入共享状态（如全局临时文件、固定名称的中间产物等），否则并发执行会产生冲突。
+> **⚠ 并发安全**：本技能/代理被 `batch-xxx` 通过多个并行后台 agent 同时调用，每个 agent 处理不同文件。修改时，必须确保不引入共享状态（如全局临时文件、固定名称的中间产物等），否则并发执行会产生冲突。
 ```
 
 **不需要标注的**：调度层 `batch-xxx` 本身（它是调度方，不会被并发调用）。
 
 ### 实际案例
 
-`batch-md-fmt`（调度层）→ `md-fmt`（执行层）→ `md-img-local`（下游 skill）
+`batch-md-fmt`（调度层）→ `md-fmt-worker`（配置层）→ `md-fmt`（执行层）→ `md-img-local`（下游 skill）
 
 ## 工作目录
 

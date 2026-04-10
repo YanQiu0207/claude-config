@@ -7,6 +7,7 @@
 | Skill | 说明 |
 |-------|------|
 | **batch-md-fmt** | 批量对多个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
+| **batch-md-fmt-v2** | 批量对多个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。与 batch-md-fmt 的区别：使用通用 agent + bypassPermissions 模式，解决后台 agent 权限受限问题。 |
 | **batch-md-lint** | 批量检查多个 Markdown 文件的排版规范。 |
 | **md-fmt** | 对单个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
 | **md-img-local** | 将 Markdown 文件中的网络图片自动下载到本地 assets 目录，添加唯一前缀避免重名冲突，自动替换原文件中的图片链接为本地相对路径。 |
@@ -20,6 +21,8 @@
 
 | Agent | 说明 |
 |-------|------|
+| **md-fmt-worker** | 对单个 Markdown 文件执行一站式标准化处理（排版 + 图片本地化），供 batch-md-fmt 并行调度使用。 |
+| **md-lint-worker** | 对单个 Markdown 文件执行排版检查与修复，供 batch-md-lint 并行调度使用。 |
 | **resume-reviewer** | 审核和评估简历，并提供修改建议。 |
 
 ## 参考文件（claude_ref）
@@ -101,13 +104,18 @@ md-fmt ─────────┬── md-img-local (skill)
 
 md-lint ────────── claude_ref/markdown-zh.md (参考文件)
 
-batch-md-fmt ───── md-fmt (skill，含上述依赖)
+batch-md-fmt ───── md-fmt-worker (agent)
+                       └── md-fmt (skill，含上述依赖)
 
-batch-md-lint ──── md-lint (skill，含上述依赖)
+batch-md-fmt-v2 ── md-fmt (skill，含上述依赖，通用 agent 模式)
+
+batch-md-lint ──── md-lint-worker (agent)
+                       └── md-lint (skill，含上述依赖)
 ```
 
 - `md-fmt` 和 `md-lint` 依赖 `claude_ref/markdown-zh.md` 排版规范文件；`md-fmt` 还依赖 `md-img-local` skill。
-- `batch-*` 系列直接并行调用单文件 skill（`md-fmt` / `md-lint`）。
+- `batch-md-fmt` 通过 `md-fmt-worker` agent 并行调用 `md-fmt`；`batch-md-fmt-v2` 功能相同，改用通用 agent + bypassPermissions 模式，无需专用 worker。
+- `batch-md-lint` 通过 `md-lint-worker` agent 并行调用 `md-lint`。
 - 其余 skill（`md-img-local`、`pdf2md`、`resume-reviewing`、`skill-del`、`skill-rename`）可独立使用。
 
 ## 开发设置
