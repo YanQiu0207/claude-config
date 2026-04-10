@@ -3,6 +3,8 @@ name: md-img-local
 description: 将Markdown文件中的网络图片自动下载到本地assets目录，添加唯一前缀避免重名冲突，自动替换原文件中的图片链接为本地相对路径。适用于用户要求"下载markdown图片"、"图片本地化"、"替换网络图片链接"等场景。
 ---
 
+> **⚠ 并发安全**：本技能被 `batch-md-fmt` 通过多个并行 agent 同时调用，每个 agent 处理不同文件。修改本技能时，必须确保不引入共享状态（如全局临时文件、固定名称的中间产物等），否则并发执行会产生冲突。
+
 # SKILL: md-img-local（Markdown图片本地化）
 
 ## Summary

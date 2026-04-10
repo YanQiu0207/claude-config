@@ -6,20 +6,23 @@
 
 | Skill | 说明 |
 |-------|------|
-| **batch-md-lint** | 批量检查 Markdown 文件质量 |
-| **md-zh** | Markdown 中文排版规范（中英文空格、全角标点、专有名词大小写等） |
-| **md-img-local** | 将 Markdown 中的网络图片下载到本地 `assets/` 目录并替换链接 |
-| **md-fmt** | 一站式 Markdown 标准化：先做中文排版规范化，再做图片本地化 |
-| **pdf2md** | 将 PDF 忠实转换为 Markdown，尽量保留原文内容和结构 |
-| **resume-reviewing** | 简历审校与优化建议 |
-| **skill-rename** | 安全地重命名 skill，并同步更新相关引用 |
+| **batch-md-fmt** | 批量对多个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
+| **batch-md-lint** | 批量检查多个 Markdown 文件的排版规范。 |
+| **batch-skill-pattern** | 批量技能的三层架构设计模式参考。 |
+| **md-fmt** | 对单个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
+| **md-img-local** | 将 Markdown 文件中的网络图片自动下载到本地 assets 目录，添加唯一前缀避免重名冲突，自动替换原文件中的图片链接为本地相对路径。 |
+| **md-zh** | markdown 文档的排版规范。 |
+| **pdf2md** | 将 PDF 忠实转换为 Markdown，最大限度保留原文内容、顺序、层级、列表、链接、图示位置与页面信息。 |
+| **resume-reviewing** | 用于检查、润色和优化简历内容，提升表达质量。 |
+| **skill-rename** | 为 skill 改名，同时自动检查和更新所有依赖关系。 |
 
 ## Agents 列表
 
 | Agent | 说明 |
 |-------|------|
-| **md-lint** | 检查 Markdown 文件排版是否符合 md-zh 规范，自动修复并输出检查报告 |
-| **resume-reviewer** | 审核和评估简历，从多维度提供详细的优化建议 |
+| **md-fmt-worker** | 对单个 Markdown 文件执行标准化处理（排版 + 图片本地化），供 batch-md-fmt 并行调度使用。 |
+| **md-lint** | 检查 Markdown 文件的排版是否符合指定规范文件，自动修复问题并输出总结。 |
+| **resume-reviewer** | 审核和评估简历，并提供修改建议。 |
 
 ## 安装方式
 

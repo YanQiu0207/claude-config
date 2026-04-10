@@ -241,6 +241,47 @@ def sync_mappings(mappings: list[SyncMapping], logger: logging.Logger) -> tuple[
     return synced, conflicts
 
 
+def update_readme_with_claude(logger: logging.Logger) -> None:
+    """调用 Claude Code CLI 更新 README.md 中的 Skills 和 Agents 列表。"""
+    prompt = (
+        "请更新 README.md 中的 Skills 列表和 Agents 列表。\n\n"
+        "具体做法：\n"
+        "1. 扫描 skills/ 目录下每个子目录的 SKILL.md，从 YAML frontmatter 读取 name 和 description\n"
+        "2. 扫描 agents/ 目录下的 .md 文件，从 YAML frontmatter 读取 name 和 description\n"
+        "3. 用读取到的信息更新 README.md 中 '## Skills 列表' 下的表格和 '## Agents 列表' 下的表格\n\n"
+        "规则：\n"
+        "- 只修改这两个表格，不改动 README 的其他任何部分\n"
+        "- 保持现有表格格式（两列：名称加粗、说明）\n"
+        "- 按名称字母顺序排列\n"
+        "- description 过长时取第一句作为说明\n"
+        "- 如果表格内容没有变化，不要修改文件"
+    )
+
+    try:
+        result = subprocess.run(
+            [
+                "claude",
+                "-p", prompt,
+                "--model", "sonnet",
+                "--allowedTools", "Read,Edit,Glob",
+            ],
+            cwd=REPO_DIR,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        if result.returncode == 0:
+            logger.info("已通过 Claude Code 更新 README.md")
+        else:
+            logger.warning("Claude Code 更新 README 失败: %s", result.stderr.strip())
+    except FileNotFoundError:
+        logger.warning("未找到 claude 命令，跳过 README 更新")
+    except subprocess.TimeoutExpired:
+        logger.warning("Claude Code 调用超时（120s），跳过 README 更新")
+    except Exception:
+        logger.warning("Claude Code 更新 README 异常，跳过", exc_info=True)
+
+
 def git_commit_and_push(synced: list[str], logger: logging.Logger) -> bool:
     subprocess.run(["git", "add", "-A"], cwd=REPO_DIR, check=True)
 
@@ -307,6 +348,9 @@ def main() -> None:
         )
 
         synced, conflicts = sync_mappings(mappings, logger)
+
+        if synced:
+            update_readme_with_claude(logger)
 
         if synced:
             logger.info("已同步 %d 个文件", len(synced))
