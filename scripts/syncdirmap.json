@@ -1,0 +1,8 @@
+{
+  "mappings": [
+    {
+      "source": "~/.claude/skills",
+      "target": "skills"
+    }
+  ]
+}
