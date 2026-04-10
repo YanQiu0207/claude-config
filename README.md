@@ -7,7 +7,6 @@
 | Skill | 说明 |
 |-------|------|
 | **batch-md-fmt** | 批量对多个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
-| **batch-md-fmt-v2** | 批量对多个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
 | **batch-md-lint** | 批量检查多个 Markdown 文件的排版规范。 |
 | **cc-adv-guide** | 【知识库】Claude Code 进阶指南，包含 Skills 与 Agents 的高级用法和设计模式。 |
 | **md-fmt** | 对单个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
@@ -114,8 +113,6 @@ md-zh ──────────── （知识库，无依赖）
 batch-md-fmt ───── md-fmt-worker (agent)
                        └── md-fmt (skill，含上述依赖)
 
-batch-md-fmt-v2 ── md-fmt (skill，含上述依赖，通用 agent 模式)
-
 batch-md-lint ──── md-lint-worker (agent)
                        └── md-lint (skill，含上述依赖)
 
@@ -125,7 +122,7 @@ cc-adv-guide ────── （知识库，无依赖）
 ```
 
 - `md-lint` 依赖 `md-zh` skill（中文排版规范知识库）；`md-fmt` 依赖 `md-lint` 和 `md-img-local` skill。
-- `batch-md-fmt` 通过 `md-fmt-worker` agent 并行调用 `md-fmt`；`batch-md-fmt-v2` 功能相同，改用通用 agent + bypassPermissions 模式，无需专用 worker。
+- `batch-md-fmt` 通过 `md-fmt-worker` agent 并行调用 `md-fmt`。
 - `batch-md-lint` 通过 `md-lint-worker` agent 并行调用 `md-lint`。
 - `resume-reviewing` 依赖 `resume-reviewer` agent 进行简历审核。
 - `md-zh`、`cc-adv-guide` 为知识库型 skill，无依赖，由其他 skill 或 CLAUDE.md 引用调用；其余 skill（`md-img-local`、`pdf2md`、`skill-del`、`skill-rename`）可独立使用。

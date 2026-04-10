@@ -71,7 +71,12 @@ Agent({
 })
 ```
 
-**实测验证**：`batch-md-fmt-v2` 曾尝试用"通用 agent + `mode: bypassPermissions`"替代 worker agent 方案，结果后台 agent 中的 `md-lint` Skill 调用仍被拒绝。`bypassPermissions` 仅影响文件编辑等常规工具的权限提示，对 Skill 工具无效。
+**实测验证**：`batch-md-fmt-v2` 曾尝试用"通用 agent + `mode: bypassPermissions`"替代 worker agent 方案，结果：
+
+- **Skill 工具**：后台 agent 中的 `md-lint` Skill 调用被拒绝
+- **Bash 工具**：即使只是执行 `curl` 下载图片，agent 同样无法自动获得权限，转而向用户请求授权——而后台 agent 无法与用户交互，等同于阻塞
+
+`mode: "bypassPermissions"` 的实际效果**比文档描述的更窄**：它对 Skill 工具和 Bash 工具均无效，不能可靠地用于需要这两类工具的后台任务。
 
 ### 无 worker agent 时的降级方案
 
