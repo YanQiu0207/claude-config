@@ -3,11 +3,18 @@ name: md-fmt
 description: |
   对单个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。当用户要求"规范化 markdown"、"标准化 markdown"、"离线化 markdown"、"本地化 markdown 图片并整理排版"时触发。只要用户提到对 markdown 做排版整理和图片下载的组合操作，就应该使用这个技能，即使用户没有明确说"标准化"。
   仅处理单个文件。如果用户提供了多个文件或通配符，应引导用户使用 `batch-md-fmt` 技能。
+allowed-tools:
+  - Read
+  - Edit
+  - Bash
+  - Skill
+  - Grep
+  - Glob
 ---
 
 当此 skill 生效时，回答第一行固定写：Using skill: md-fmt
 
-> **⚠ 并发安全**：本技能被 `batch-md-fmt` 通过多个并行 `md-fmt-worker` agent 同时调用，每个 agent 处理不同文件。修改本技能时，必须确保不引入共享状态（如全局临时文件、固定名称的中间产物等），否则并发执行会产生冲突。
+> **⚠ 并发安全**：本技能被 `batch-md-fmt` 通过多个并行后台 agent 同时调用，每个 agent 处理不同文件。修改本技能时，必须确保不引入共享状态（如全局临时文件、固定名称的中间产物等），否则并发执行会产生冲突。
 
 > **注意**：本技能仅处理单个文件。如果用户提供了多个文件路径或通配符（如 `*.md`、`**/*.md`），请告知用户并改为调用 `batch-md-fmt` 技能。
 

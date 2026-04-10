@@ -1,8 +1,7 @@
 ---
 name: batch-md-lint
 description: |
-  批量检查多个 Markdown 文件的排版规范。接收多个文件路径或通配符，对每个文件并行调用 md-lint-worker 进行检查和修复，最后汇总输出结果。
-  通过 subagent 并行处理多个文件，每个文件独立调用 md-lint 的单文件流程。
+  批量检查多个 Markdown 文件的排版规范。接收多个文件路径或通配符，对每个文件并行启动后台 agent 调用 md-lint 技能进行检查和修复，最后汇总输出结果。
 ---
 
 当此 skill 生效时，回答第一行固定写：Using skill: batch-md-lint
@@ -18,42 +17,9 @@ description: |
 
 ### 步骤 2：并行分发
 
-在**同一条消息**中，为每个文件发起一个 Agent 工具调用，实现真正的并行执行：
-
-- 使用 `subagent_type: "md-lint-worker"`（已配置 `md-lint` 技能、所需工具和 `bypassPermissions` 权限）
-- 使用 `run_in_background: true` 让 agent 在后台运行，不阻塞主对话，完成后自动通知
-- prompt 中必须写明文件的**绝对路径**（subagent 是独立上下文，看不到主对话）
 - 同时并行不超过 8 个文件，超过时分批处理
 - 如果某个文件不存在，跳过并在汇总中报告
-
-每个 Agent 的 prompt 模板如下：
-
-```
-请对文件 {绝对路径} 执行 Markdown 排版检查与修复。
-```
-
-示例（处理 3 个文件时，在一条消息中同时发起 3 个后台 Agent 调用）：
-
-```
-Agent({
-  description: "md-lint: file1.md",
-  subagent_type: "md-lint-worker",
-  run_in_background: true,
-  prompt: "请对文件 E:/docs/file1.md 执行 Markdown 排版检查与修复。"
-})
-Agent({
-  description: "md-lint: file2.md",
-  subagent_type: "md-lint-worker",
-  run_in_background: true,
-  prompt: "请对文件 E:/docs/file2.md 执行 Markdown 排版检查与修复。"
-})
-Agent({
-  description: "md-lint: file3.md",
-  subagent_type: "md-lint-worker",
-  run_in_background: true,
-  prompt: "请对文件 E:/docs/file3.md 执行 Markdown 排版检查与修复。"
-})
-```
+- 如果某个文件存在，就在后台调用 md-lint 技能进行处理，参数是文件的绝对路径
 
 ### 步骤 3：汇总报告
 

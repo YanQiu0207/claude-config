@@ -178,6 +178,29 @@ skills:
 - 通过 `tools` 限制权限，提高安全性
 - 细化 `description`，让 Claude 知道何时自动委托
 
+## Skill 的 `context: fork` 选项
+
+在 SKILL.md 的 frontmatter 中可以配置 `context: fork`，让技能在**隔离的子代理环境**中运行，而不是在当前对话上下文中执行。
+
+```yaml
+---
+name: deep-research
+description: Research a topic thoroughly
+context: fork
+agent: Explore
+---
+```
+
+- 子代理**无法访问**对话历史，技能内容本身成为驱动子代理的提示词
+- `agent` 字段可指定子代理类型：`Explore`、`Plan`、`general-purpose`，或自定义 agent
+- 技能必须包含**明确的任务指示**，纯指导原则类的技能用 `context: fork` 没有意义
+
+### 什么时候需要用
+
+大多数 skill 不需要 `context: fork`。典型场景是：**不希望当前对话上下文影响 skill 的判断**，比如每次从零开始独立评估的代码审查 skill。
+
+但这些场景用 Agent 工具 + `run_in_background: true` + worker agent 也能达到类似效果（即三层架构模式）。`context: fork` 更像是一个轻量级替代方案——不用单独写 agent 定义文件，直接在 skill 里声明隔离运行。
+
 ## Skill 批量执行设计模式
 
 当一个 skill 需要支持批量（多文件）执行时，采用三层架构：

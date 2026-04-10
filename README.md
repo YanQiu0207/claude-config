@@ -20,8 +20,6 @@
 
 | Agent | 说明 |
 |-------|------|
-| **md-fmt-worker** | 对单个 Markdown 文件执行标准化处理（排版 + 图片本地化），供 batch-md-fmt 并行调度使用。 |
-| **md-lint-worker** | 对单个 Markdown 文件执行排版检查与修复，供 batch-md-lint 并行调度使用。 |
 | **resume-reviewer** | 审核和评估简历，并提供修改建议。 |
 
 ## 参考文件（claude_ref）
@@ -103,15 +101,13 @@ md-fmt ─────────┬── md-img-local (skill)
 
 md-lint ────────── claude_ref/markdown-zh.md (参考文件)
 
-batch-md-fmt ───┬── md-fmt-worker (agent)
-                └── md-fmt (skill，含上述依赖)
+batch-md-fmt ───── md-fmt (skill，含上述依赖)
 
-batch-md-lint ──┬── md-lint-worker (agent)
-                └── md-lint (skill，含上述依赖)
+batch-md-lint ──── md-lint (skill，含上述依赖)
 ```
 
 - `md-fmt` 和 `md-lint` 依赖 `claude_ref/markdown-zh.md` 排版规范文件；`md-fmt` 还依赖 `md-img-local` skill。
-- `batch-*` 系列通过对应的 worker agent 并行调度单文件 skill。
+- `batch-*` 系列直接并行调用单文件 skill（`md-fmt` / `md-lint`）。
 - 其余 skill（`md-img-local`、`pdf2md`、`resume-reviewing`、`skill-del`、`skill-rename`）可独立使用。
 
 ## 开发设置
@@ -145,6 +141,10 @@ cp .githooks/sensitive-patterns.example .githooks/sensitive-patterns
     {
       "source": "~/.claude/agents",
       "target": "agents"
+    },
+    {
+      "source": "~/.claude/claude_ref",
+      "target": "claude_ref"
     },
     {
       "enabled": false,
