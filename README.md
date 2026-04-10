@@ -24,47 +24,74 @@
 | **md-lint-worker** | 对单个 Markdown 文件执行排版检查与修复，供 batch-md-lint 并行调度使用。 |
 | **resume-reviewer** | 审核和评估简历，并提供修改建议。 |
 
-## 安装方式
+## 目录结构
 
-将需要的 skill / agent 目录或文件复制到 `~/.claude/` 对应目录下即可：
-
-```bash
-# 克隆仓库
-git clone <repo-url> claude-config
-
-# 复制单个 skill
-cp -r claude-config/skills/md-zh ~/.claude/skills/
-
-# 复制全部 skills
-cp -r claude-config/skills/* ~/.claude/skills/
-
-# 复制全部 agents
-cp -r claude-config/agents/* ~/.claude/agents/
+```text
+~/.claude/
+├── skills/          # 技能定义
+├── agents/          # Agent 定义
+├── claude_ref/      # 参考文件（排版规范、知识库等）
+└── CLAUDE.md        # 全局指令
 ```
 
-Windows 用户：
+## 安装方式
+
+将仓库中的文件复制到 `~/.claude/` 对应目录下即可。
+
+### 完整安装
+
+```bash
+git clone <repo-url> claude-config
+cd claude-config
+
+# 一次性复制所有内容
+cp -r skills/* ~/.claude/skills/
+cp -r agents/* ~/.claude/agents/
+cp -r claude_ref/* ~/.claude/claude_ref/
+```
+
+Windows（PowerShell）：
 
 ```powershell
-# 复制单个 skill
-Copy-Item -Recurse claude-config\skills\md-zh $env:USERPROFILE\.claude\skills\
+git clone <repo-url> claude-config
+cd claude-config
 
-# 复制全部 skills
-Copy-Item -Recurse claude-config\skills\* $env:USERPROFILE\.claude\skills\
+Copy-Item -Recurse skills\* $env:USERPROFILE\.claude\skills\
+Copy-Item -Recurse agents\* $env:USERPROFILE\.claude\agents\
+Copy-Item -Recurse claude_ref\* $env:USERPROFILE\.claude\claude_ref\
+```
 
-# 复制全部 agents
-Copy-Item -Recurse claude-config\agents\* $env:USERPROFILE\.claude\agents\
+### 按需安装
+
+只安装单个 skill 时，注意同时安装它的依赖（参见下方依赖关系）。
+
+```bash
+# 示例：只安装 md-fmt 及其依赖
+cp -r claude-config/skills/md-fmt ~/.claude/skills/
+cp -r claude-config/skills/md-img-local ~/.claude/skills/
+cp -r claude-config/claude_ref/markdown-zh.md ~/.claude/claude_ref/
 ```
 
 ## 依赖关系
 
 ```text
-md-fmt
-├── md-zh
-└── md-img-local
+md-fmt ─────────┬── md-img-local (skill)
+                └── claude_ref/markdown-zh.md (参考文件)
+
+md-lint ────────── claude_ref/markdown-zh.md (参考文件)
+
+batch-md-fmt ───┬── md-fmt-worker (agent)
+                └── md-fmt (skill，含上述依赖)
+
+batch-md-lint ──┬── md-lint-worker (agent)
+                └── md-lint (skill，含上述依赖)
+
+resume-reviewing ── resume-reviewer (agent)
 ```
 
-- `md-fmt` 依赖 `md-zh` 和 `md-img-local`，使用前需要同时安装这两个 skill。
-- 其他 skill 可以独立使用。
+- `md-fmt` 和 `md-lint` 依赖 `claude_ref/markdown-zh.md` 排版规范文件；`md-fmt` 还依赖 `md-img-local` skill。
+- `batch-*` 系列通过对应的 worker agent 并行调度单文件 skill。
+- 其余 skill（`pdf2md`、`skill-del`、`skill-rename`）可独立使用。
 
 ## 开发设置
 
@@ -91,14 +118,17 @@ cp .githooks/sensitive-patterns.example .githooks/sensitive-patterns
 {
   "mappings": [
     {
-      "enabled": true,
-      "source": "~/.claude/skills/md-zh",
-      "target": "md-zh"
+      "source": "~/.claude/skills",
+      "target": "skills"
+    },
+    {
+      "source": "~/.claude/agents",
+      "target": "agents"
     },
     {
       "enabled": false,
-      "source": "~/.claude/skills/shared/prompt.md",
-      "target": "docs/prompt.md"
+      "source": "~/.claude/some-dir",
+      "target": "some-dir"
     }
   ]
 }
