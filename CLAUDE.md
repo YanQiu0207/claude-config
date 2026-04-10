@@ -20,6 +20,4 @@
 
 \## 创建技能的规则
 \- 创建新的文件处理类技能时，主动询问用户是否需要支持批量（多文件）执行
-\- 如果需要批量支持，先读取 `~/.claude/claude_ref/claude-code-guide.md`，按照其中的三层架构设计模式来实现
-\- 后台 agent 的 `permissionMode` 必须写在 agent 定义文件（`~/.claude/agents/*.md`）的 frontmatter 中
-  \- 注意：调用时通过 `mode` 参数传入无效
+\- 如果需要批量支持，先读取 `~/.claude/claude_ref/claude-code-guide.md`，按照其中的两层架构设计模式来实现

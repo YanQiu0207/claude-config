@@ -61,7 +61,7 @@ cp -r agents/* ~/.claude/agents/
 cp -r claude_ref/* ~/.claude/claude_ref/
 
 # CLAUDE.md 包含全局指令，本地已有则不要覆盖，请手动合并
-cp -n claude-config/CLAUDE.md ~/.claude/CLAUDE.md
+cp -n CLAUDE.md ~/.claude/CLAUDE.md
 ```
 
 Windows（PowerShell）：
@@ -135,21 +135,21 @@ cp .githooks/sensitive-patterns.example .githooks/sensitive-patterns
 {
   "mappings": [
     {
-      "source": "~/.claude/skills",
-      "target": "skills"
+      "source": "~/source/dir-a",
+      "target": "dir-a"
     },
     {
-      "source": "~/.claude/agents",
-      "target": "agents"
+      "source": "~/source/dir-b",
+      "target": "dir-b"
     },
     {
-      "source": "~/.claude/claude_ref",
-      "target": "claude_ref"
+      "source": "~/source/config.md",
+      "target": "config.md"
     },
     {
       "enabled": false,
-      "source": "~/.claude/some-dir",
-      "target": "some-dir"
+      "source": "~/source/dir-c",
+      "target": "dir-c"
     }
   ]
 }
