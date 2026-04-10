@@ -3,6 +3,11 @@ name: md-lint
 description: |
   检查 Markdown 文件的排版是否符合指定规范文件，自动修复问题并输出总结。当用户要求检查 markdown 排版、lint markdown、审查 markdown 格式时使用。
   仅处理单个文件。如果用户提供了多个文件或通配符，应引导用户使用 `batch-md-lint` 技能。
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Edit
 ---
 
 当此 skill 生效时，回答第一行固定写：Using skill: md-lint
