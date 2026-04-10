@@ -31,7 +31,7 @@ Skills 运行时引用的规范和知识库文件，安装对应 skill 时需一
 
 | 文件 | 说明 | 被引用方 |
 |------|------|----------|
-| **markdown-zh.md** | 中文文案排版指南，定义中英混排、标点、空格等规范。 | md-fmt、md-lint |
+| **markdown-zh.md** | 中文文案排版指南，定义中英混排、标点、空格等规范。 | md-fmt、md-lint、batch-md-fmt、batch-md-lint |
 | **claude-code-guide.md** | Claude Code 使用技巧汇总，供 CLAUDE.md 中的知识库查询指令引用。 | CLAUDE.md |
 
 ## 全局指令（CLAUDE.md）
@@ -46,6 +46,8 @@ claude-config/
 ├── claude_ref/      # 参考文件（排版规范、知识库等）
 ├── scripts/         # 路径同步脚本
 ├── skills/          # 技能定义
+├── .githooks/       # Git 钩子配置（开发用）
+├── .gitignore       # Git 忽略规则
 └── CLAUDE.md        # 全局指令
 ```
 
@@ -111,12 +113,15 @@ batch-md-fmt-v2 ── md-fmt (skill，含上述依赖，通用 agent 模式)
 
 batch-md-lint ──── md-lint-worker (agent)
                        └── md-lint (skill，含上述依赖)
+
+resume-reviewing ── resume-reviewer (agent)
 ```
 
 - `md-fmt` 和 `md-lint` 依赖 `claude_ref/markdown-zh.md` 排版规范文件；`md-fmt` 还依赖 `md-img-local` skill。
 - `batch-md-fmt` 通过 `md-fmt-worker` agent 并行调用 `md-fmt`；`batch-md-fmt-v2` 功能相同，改用通用 agent + bypassPermissions 模式，无需专用 worker。
 - `batch-md-lint` 通过 `md-lint-worker` agent 并行调用 `md-lint`。
-- 其余 skill（`md-img-local`、`pdf2md`、`resume-reviewing`、`skill-del`、`skill-rename`）可独立使用。
+- `resume-reviewing` 依赖 `resume-reviewer` agent 进行简历审核。
+- 其余 skill（`md-img-local`、`pdf2md`、`skill-del`、`skill-rename`）可独立使用。
 
 ## 开发设置
 
@@ -153,11 +158,6 @@ cp .githooks/sensitive-patterns.example .githooks/sensitive-patterns
     {
       "source": "~/source/config.md",
       "target": "config.md"
-    },
-    {
-      "enabled": false,
-      "source": "~/source/dir-c",
-      "target": "dir-c"
     }
   ]
 }

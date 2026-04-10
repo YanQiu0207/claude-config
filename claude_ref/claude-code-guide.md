@@ -155,6 +155,31 @@ Agent({
 })
 ```
 
+### 关键配置：Skill 的 `allowed-tools`
+
+Skill 的 YAML frontmatter 中的 `allowed-tools` 字段声明该 skill 执行时哪些工具可免权限弹窗使用。这是**后台 agent 能否正常调用 skill 的关键**。
+
+```yaml
+---
+name: md-img-local
+allowed-tools:
+  - Read
+  - Edit
+  - Bash
+  - Grep
+  - Glob
+---
+```
+
+**与 `permissionMode` 的区别**：
+
+| 机制 | 作用对象 | 场景 |
+| --- | --- | --- |
+| `permissionMode` | agent 自身 | 控制 agent 直接使用工具时的权限 |
+| `allowed-tools` | skill | 控制 skill 被调用时内部工具的权限 |
+
+**后台 agent 调用 skill 链时**，链路上每个 skill 都必须有完整的 `allowed-tools` 声明。例如 batch 技能 → md-fmt（需要 allowed-tools）→ md-img-local（也需要 allowed-tools），任何一层缺失都会导致后台 agent 因无法交互审批而失败。
+
 ### 关键配置：`skills`
 
 subagent 需要调用 skill 时，必须在 agent 定义文件的 frontmatter 中通过 `skills` 字段声明依赖。未声明的 skill 无法使用。
