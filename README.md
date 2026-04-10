@@ -14,6 +14,7 @@
 | **md-zh** | markdown文档的排版规范。 |
 | **pdf2md** | 将 PDF 忠实转换为 Markdown，最大限度保留原文内容、顺序、层级、列表、链接、图示位置与页面信息。 |
 | **resume-reviewing** | 用于检查、润色和优化简历内容，提升表达质量。 |
+| **skill-del** | 安全删除 skill，自动扫描并处理所有依赖关系（其他 skill、agent 中的引用），确保删除后系统一致。 |
 | **skill-rename** | 为 skill 改名，同时自动检查和更新所有依赖关系。 |
 
 ## Agents 列表

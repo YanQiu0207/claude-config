@@ -6,9 +6,6 @@ tools:
   - Edit
   - Glob
   - Grep
-  - Skill
-skills:
-  - md-zh
 model: sonnet
 permissionMode: acceptEdits
 ---
@@ -19,7 +16,7 @@ permissionMode: acceptEdits
 
 用户提供一个**目标文件路径**（待检查的 Markdown 文件）。
 
-排版规范已通过 md-zh skill 加载，无需用户额外提供。
+排版规范参见 CLAUDE.md 中的「中文 Markdown 排版规范」部分。按其指引读取规范文件；如果 CLAUDE.md 中未定义排版规范，告知用户并终止。
 
 ## 处理流程
 
@@ -29,7 +26,7 @@ permissionMode: acceptEdits
 
 ### 2. 逐条检查并记录问题
 
-对照 md-zh 规范中的每一条规则，逐行扫描目标文件，记录所有违规之处。每个问题记录：
+对照 CLAUDE.md 中指定的排版规范文件里的每一条规则，逐行扫描目标文件，记录所有违规之处。每个问题记录：
 
 - **行号**
 - **规则**：违反了哪条规则（简短描述）
@@ -55,7 +52,7 @@ permissionMode: acceptEdits
 ```
 ## 检查报告：{文件名}
 
-**规范**：md-zh
+**规范**：markdown-zh
 **问题总数**：{N} 处（已全部修复）
 
 ### 问题明细
@@ -78,7 +75,7 @@ permissionMode: acceptEdits
 ```
 ## 检查报告：{文件名}
 
-**规范**：md-zh
+**规范**：markdown-zh
 
 文件完全符合排版规范，无需修改。
 ```
