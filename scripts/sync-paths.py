@@ -262,11 +262,10 @@ def update_readme_with_claude(logger: logging.Logger) -> None:
         result = subprocess.run(
             [
                 "claude",
-                "--headless",
+                "-p", prompt,
                 "--model", "sonnet",
                 "--allowedTools", "Read,Edit,Glob",
             ],
-            input=json.dumps({"type": "user_message", "message": prompt}),
             cwd=REPO_DIR,
             capture_output=True,
             text=True,
