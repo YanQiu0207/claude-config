@@ -1,6 +1,6 @@
-# Claude Code Skills
+# Claude Code Config
 
-个人自定义的 Claude Code Skills 集合。
+个人 Claude Code 配置同步仓库，包含自定义的 Skills 和 Agents。
 
 ## Skills 列表
 
@@ -14,29 +14,42 @@
 | **resume-reviewing** | 简历审校与优化建议 |
 | **skill-rename** | 安全地重命名 skill，并同步更新相关引用 |
 
+## Agents 列表
+
+| Agent | 说明 |
+|-------|------|
+| **md-lint** | 检查 Markdown 文件排版是否符合 md-zh 规范，自动修复并输出检查报告 |
+| **resume-reviewer** | 审核和评估简历，从多维度提供详细的优化建议 |
+
 ## 安装方式
 
-将需要的 skill 目录复制到 `~/.claude/skills/` 下即可：
+将需要的 skill / agent 目录或文件复制到 `~/.claude/` 对应目录下即可：
 
 ```bash
 # 克隆仓库
-git clone <repo-url> claude-skills
+git clone <repo-url> claude-config
 
 # 复制单个 skill
-cp -r claude-skills/md-zh ~/.claude/skills/
+cp -r claude-config/skills/md-zh ~/.claude/skills/
 
-# 或复制全部 skill
-cp -r claude-skills/*/ ~/.claude/skills/
+# 复制全部 skills
+cp -r claude-config/skills/* ~/.claude/skills/
+
+# 复制全部 agents
+cp -r claude-config/agents/* ~/.claude/agents/
 ```
 
 Windows 用户：
 
 ```powershell
 # 复制单个 skill
-Copy-Item -Recurse claude-skills\md-zh $env:USERPROFILE\.claude\skills\
+Copy-Item -Recurse claude-config\skills\md-zh $env:USERPROFILE\.claude\skills\
 
-# 或复制全部 skill
-Get-ChildItem claude-skills -Directory | Copy-Item -Recurse -Destination $env:USERPROFILE\.claude\skills\
+# 复制全部 skills
+Copy-Item -Recurse claude-config\skills\* $env:USERPROFILE\.claude\skills\
+
+# 复制全部 agents
+Copy-Item -Recurse claude-config\agents\* $env:USERPROFILE\.claude\agents\
 ```
 
 ## 依赖关系
@@ -62,7 +75,8 @@ cp .githooks/sensitive-patterns.example .githooks/sensitive-patterns
 
 ## 使用注意
 
-- `resume-reviewing` 的 `SKILL.md` 可能包含个人求职背景信息，使用前请按自己的情况修改。
+- `resume-reviewing` skill 的 `SKILL.md` 可能包含个人求职背景信息，使用前请按自己的情况修改。
+- `resume-reviewer` agent 同理，使用前请根据自己的情况调整 prompt 内容。
 
 ## 路径同步脚本
 
