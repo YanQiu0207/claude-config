@@ -249,7 +249,9 @@ permissionMode: bypassPermissions
 处理完成后，返回简洁的结果摘要。
 ```
 
-### 并发安全检查清单
+### 并发安全
+
+#### 检查清单
 
 执行层 skill 必须确保并发安全：
 
@@ -257,9 +259,39 @@ permissionMode: bypassPermissions
 - 不依赖共享的全局状态
 - 每个文件的产出路径互不冲突（如用文件名前缀区分）
 
+#### 标注义务
+
+凡是会被 batch 调度层通过多个并行 agent 同时调用的 **skill** 和 **agent**，都必须在文件中添加并发安全说明，提醒后续修改者不要引入共享状态。
+
+**需要标注的层级**：
+
+| 层级 | 文件位置 | 说明 |
+| --- | --- | --- |
+| 执行层 skill | `skills/xxx/SKILL.md` | 实际执行逻辑，最易引入共享状态冲突 |
+| 执行层 skill 调用的下游 skill | 如 `md-img-local` | 被间接并发调用，同样需要标注 |
+| 配置层 agent | `agents/xxx-worker.md` | 被并行启动多个实例 |
+
+**标注格式**：
+
+在 frontmatter 之后、正文开头处添加 blockquote：
+
+执行层 skill：
+
+```markdown
+> **⚠ 并发安全**：本技能被 `batch-xxx` 通过多个并行 `xxx-worker` agent 同时调用，每个 agent 处理不同文件。修改本技能时，必须确保不引入共享状态（如全局临时文件、固定名称的中间产物等），否则并发执行会产生冲突。
+```
+
+配置层 agent：
+
+```markdown
+> **⚠ 并发安全**：本 agent 被 `batch-xxx` 并行启动多个实例，每个实例处理不同文件。修改本定义时，确保不引入实例间共享状态。
+```
+
+**不需要标注的**：调度层 `batch-xxx` 本身（它是调度方，不会被并发调用）。
+
 ### 实际案例
 
-`batch-md-fmt`（调度层）→ `md-fmt-worker`（配置层）→ `md-fmt`（执行层）
+`batch-md-fmt`（调度层）→ `md-fmt-worker`（配置层）→ `md-fmt`（执行层）→ `md-img-local`（下游 skill）
 
 ## 工作目录
 

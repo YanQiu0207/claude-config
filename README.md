@@ -10,6 +10,7 @@
 | **batch-md-lint** | 批量检查多个 Markdown 文件的排版规范。 |
 | **md-fmt** | 对单个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
 | **md-img-local** | 将Markdown文件中的网络图片自动下载到本地assets目录，添加唯一前缀避免重名冲突，自动替换原文件中的图片链接为本地相对路径。 |
+| **md-lint** | 检查 Markdown 文件的排版是否符合指定规范文件，自动修复问题并输出总结。 |
 | **pdf2md** | 将 PDF 忠实转换为 Markdown，最大限度保留原文内容、顺序、层级、列表、链接、图示位置与页面信息。 |
 | **resume-reviewing** | 用于检查、润色和优化简历内容，提升表达质量。 |
 | **skill-del** | 安全删除 skill，自动扫描并处理所有依赖关系（其他 skill、agent 中的引用），确保删除后系统一致。 |
@@ -20,7 +21,7 @@
 | Agent | 说明 |
 |-------|------|
 | **md-fmt-worker** | 对单个 Markdown 文件执行标准化处理（排版 + 图片本地化），供 batch-md-fmt 并行调度使用。 |
-| **md-lint** | 检查 Markdown 文件的排版是否符合指定规范文件，自动修复问题并输出总结。 |
+| **md-lint-worker** | 对单个 Markdown 文件执行排版检查与修复，供 batch-md-lint 并行调度使用。 |
 | **resume-reviewer** | 审核和评估简历，并提供修改建议。 |
 
 ## 安装方式

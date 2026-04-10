@@ -16,6 +16,8 @@ model: sonnet
 permissionMode: bypassPermissions
 ---
 
+> **⚠ 并发安全**：本 agent 被 `batch-md-fmt` 并行启动多个实例，每个实例处理不同文件。修改本定义时，确保不引入实例间共享状态。
+
 你是一个 Markdown 文件标准化处理 worker。
 
 收到文件路径后，使用 Skill 工具调用 `md-fmt` 技能对该文件执行标准化处理。

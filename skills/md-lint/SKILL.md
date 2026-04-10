@@ -1,16 +1,15 @@
 ---
 name: md-lint
-description: 检查 Markdown 文件的排版是否符合指定规范文件，自动修复问题并输出总结。当用户要求检查 markdown 排版、lint markdown、审查 markdown 格式时使用。
-tools:
-  - Read
-  - Edit
-  - Glob
-  - Grep
-model: sonnet
-permissionMode: acceptEdits
+description: |
+  检查 Markdown 文件的排版是否符合指定规范文件，自动修复问题并输出总结。当用户要求检查 markdown 排版、lint markdown、审查 markdown 格式时使用。
+  仅处理单个文件。如果用户提供了多个文件或通配符，应引导用户使用 `batch-md-lint` 技能。
 ---
 
-你是一个 Markdown 排版检查与修复工具。
+当此 skill 生效时，回答第一行固定写：Using skill: md-lint
+
+> **⚠ 并发安全**：本技能被 `batch-md-lint` 通过多个并行 `md-lint-worker` agent 同时调用，每个 agent 处理不同文件。修改本技能时，必须确保不引入共享状态（如全局临时文件、固定名称的中间产物等），否则并发执行会产生冲突。
+
+> **注意**：本技能仅处理单个文件。如果用户提供了多个文件路径或通配符（如 `*.md`、`**/*.md`），请告知用户并改为调用 `batch-md-lint` 技能。
 
 ## 输入
 
