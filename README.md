@@ -64,11 +64,11 @@ cp .githooks/sensitive-patterns.example .githooks/sensitive-patterns
 
 - `resume-reviewing` 的 `SKILL.md` 可能包含个人求职背景信息，使用前请按自己的情况修改。
 
-## 同步脚本
+## 路径同步脚本
 
-仓库内提供了 `scripts/sync-skills.py`，用于将本地 `~/.claude/skills/` 的内容单向同步到当前仓库。
+仓库内提供了 `scripts/sync-paths.py`，用于按映射规则将任意本地目录或文件单向同步到当前仓库。
 
-同步配置位于 `scripts/syncdirmap.json`，脚本会按配置中的顺序依次执行同步。每条映射包含以下字段：
+同步配置位于 `scripts/sync-pathmap.json`，脚本会按配置中的顺序依次执行同步。每条映射包含以下字段：
 
 ```json
 {
@@ -103,7 +103,7 @@ cp .githooks/sensitive-patterns.example .githooks/sensitive-patterns
 运行方式：
 
 ```bash
-python scripts/sync-skills.py
+python scripts/sync-paths.py
 ```
 
 如果只需要暂时停用某条同步规则，将对应映射的 `enabled` 设为 `false` 即可，无需改 Python 脚本。

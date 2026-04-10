@@ -3,6 +3,10 @@
     {
       "source": "~/.claude/skills",
       "target": "skills"
+    },
+    {
+      "source": "~/.claude/agents",
+      "target": "agents"
     }
   ]
 }

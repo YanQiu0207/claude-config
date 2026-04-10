@@ -1,10 +1,11 @@
 """
-将本地 Claude skills 单向同步到当前仓库。
+将本地路径按映射规则单向同步到当前仓库。
 
 同步规则：
-- 从 scripts/syncdirmap.json 读取映射配置。
+- 从 scripts/sync-pathmap.json 读取映射配置。
 - 每条映射支持 enabled/source/target 三个字段。
 - 支持“文件 -> 文件”和“目录 -> 目录”两种映射方式。
+- 支持同步任意目录或文件，不限于 Claude skills。
 - 如果源文件比目标文件新，则覆盖目标文件。
 - 如果目标文件比源文件新，则保留目标文件并记录为冲突。
 - 如果源侧存在新文件，则复制到仓库。
@@ -25,7 +26,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 REPO_DIR = Path(__file__).resolve().parent.parent
-CONFIG_FILE = REPO_DIR / "scripts" / "syncdirmap.json"
+CONFIG_FILE = REPO_DIR / "scripts" / "sync-pathmap.json"
 LOG_FILE = REPO_DIR / "scripts" / "sync.log"
 IGNORED_DIR_NAMES = {"__pycache__"}
 IGNORED_SUFFIXES = {".pyc", ".pyo"}
@@ -41,7 +42,7 @@ class SyncMapping:
 
 
 def setup_logging() -> logging.Logger:
-    logger = logging.getLogger("sync-skills")
+    logger = logging.getLogger("sync-paths")
     logger.setLevel(logging.INFO)
     logger.propagate = False
 
@@ -247,7 +248,7 @@ def git_commit_and_push(synced: list[str], logger: logging.Logger) -> bool:
     if result.returncode == 0:
         return False
 
-    message = f"脚本自动同步 {len(synced)} 个文件\n\n" + "\n".join(synced)
+    message = f"脚本按映射自动同步 {len(synced)} 个文件\n\n" + "\n".join(synced)
     subprocess.run(["git", "commit", "-m", message], cwd=REPO_DIR, check=True)
 
     result = subprocess.run(
