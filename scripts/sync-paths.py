@@ -265,17 +265,21 @@ def update_readme_with_claude(logger: logging.Logger) -> None:
         "## 信息采集\n\n"
         "1. 扫描 skills/ 下每个子目录的 SKILL.md，读取 YAML frontmatter 中的 name 和 description\n"
         "2. 扫描 agents/ 下的 .md 文件，读取 YAML frontmatter 中的 name 和 description\n"
-        "3. 扫描每个 SKILL.md 正文，提取依赖关系：\n"
+        "3. 读取 claude_ref/ 下的每个文件，了解其用途\n"
+        "4. 读取 CLAUDE.md，了解全局指令内容\n"
+        "5. 扫描每个 SKILL.md 正文，提取依赖关系：\n"
         "   - 调用了哪些其他 skill（关键词：Skill 工具、调用 xxx 技能）\n"
         "   - 调用了哪些 agent（关键词：worker agent、xxx-worker）\n"
         "   - 引用了 claude_ref/ 下的哪些参考文件（关键词：CLAUDE.md 中的、规范文件）\n"
-        "4. 读取 scripts/sync-pathmap.json 了解实际同步映射配置\n\n"
+        "6. 读取 scripts/sync-pathmap.json 了解实际同步映射配置\n\n"
         "## 更新范围\n\n"
         "逐一检查 README.md 中的以下章节，将过时内容更新为采集到的实际信息：\n\n"
         "- **Skills 列表**：表格内容与扫描结果对齐，按名称排序，description 过长取第一句\n"
         "- **Agents 列表**：同上\n"
+        "- **参考文件（claude_ref）**：列出 claude_ref/ 下每个文件的用途及被哪些 skill 引用（三列表格：文件、说明、被引用方）\n"
+        "- **全局指令（CLAUDE.md）**：简要描述 CLAUDE.md 的核心配置内容\n"
         "- **目录结构**：与仓库顶层实际目录一致\n"
-        "- **安装方式**：复制命令覆盖所有需要安装的目录（skills、agents、claude_ref 等）\n"
+        "- **安装方式**：复制命令覆盖所有需要安装的目录（skills、agents、claude_ref 等），CLAUDE.md 需提示不要覆盖本地已有文件\n"
         "- **依赖关系**：用树状图展示完整依赖链，包括 skill、agent、参考文件三类依赖\n"
         "- **路径同步脚本**：示例 JSON 与 sync-pathmap.json 的实际格式和字段一致（不要照搬真实路径，用示意性内容）\n\n"
         "## 规则\n\n"
@@ -297,7 +301,7 @@ def update_readme_with_claude(logger: logging.Logger) -> None:
             cwd=REPO_DIR,
             capture_output=True,
             text=True,
-            timeout=180,
+            timeout=300,  # 5分钟超时
         )
         if result.returncode == 0:
             logger.info("已通过 Claude Code 更新 README.md")

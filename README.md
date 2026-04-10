@@ -1,6 +1,6 @@
 # Claude Code Config
 
-个人 Claude Code 配置同步仓库，包含自定义的 Skills 和 Agents。
+个人 Claude Code 配置同步仓库，包含自定义的 Skills、Agents、参考文件和全局指令。
 
 ## Skills 列表
 
@@ -9,7 +9,7 @@
 | **batch-md-fmt** | 批量对多个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
 | **batch-md-lint** | 批量检查多个 Markdown 文件的排版规范。 |
 | **md-fmt** | 对单个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
-| **md-img-local** | 将Markdown文件中的网络图片自动下载到本地assets目录，添加唯一前缀避免重名冲突，自动替换原文件中的图片链接为本地相对路径。 |
+| **md-img-local** | 将 Markdown 文件中的网络图片自动下载到本地 assets 目录，添加唯一前缀避免重名冲突，自动替换原文件中的图片链接为本地相对路径。 |
 | **md-lint** | 检查 Markdown 文件的排版是否符合指定规范文件，自动修复问题并输出总结。 |
 | **pdf2md** | 将 PDF 忠实转换为 Markdown，最大限度保留原文内容、顺序、层级、列表、链接、图示位置与页面信息。 |
 | **resume-reviewing** | 用于检查、润色和优化简历内容，提升表达质量。 |
@@ -23,6 +23,19 @@
 | **md-fmt-worker** | 对单个 Markdown 文件执行标准化处理（排版 + 图片本地化），供 batch-md-fmt 并行调度使用。 |
 | **md-lint-worker** | 对单个 Markdown 文件执行排版检查与修复，供 batch-md-lint 并行调度使用。 |
 | **resume-reviewer** | 审核和评估简历，并提供修改建议。 |
+
+## 参考文件（claude_ref）
+
+Skills 运行时引用的规范和知识库文件，安装对应 skill 时需一并安装。
+
+| 文件 | 说明 | 被引用方 |
+|------|------|----------|
+| **markdown-zh.md** | 中文文案排版指南，定义中英混排、标点、空格等规范。 | md-fmt、md-lint |
+| **claude-code-guide.md** | Claude Code 使用技巧汇总，供 CLAUDE.md 中的知识库查询指令引用。 | CLAUDE.md |
+
+## 全局指令（CLAUDE.md）
+
+Claude Code 的全局行为配置，定义沟通语言（中文）、代码风格（4 空格缩进）、参考知识库路径、排版规范路径等。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
 
 ## 目录结构
 
