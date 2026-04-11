@@ -197,6 +197,19 @@ skills:
 ---
 ```
 
+### 两种运行模式与嵌套限制
+
+同一个 agent 定义文件有两种运行模式，能力不同：
+
+| 运行模式 | 启动方式 | 身份 | 能否派生 subagent |
+| --- | --- | --- | --- |
+| **主线程模式** | `claude --agent coordinator` | 主线程 | 能 |
+| **subagent 模式** | @mention 或 Agent 工具派生 | subagent | **不能** |
+
+**嵌套限制**：subagent 不能派生其他 subagent（内部调用 Agent 工具无效）。需要嵌套委托时，用 Skill 或从主对话链式调用 subagent。
+
+**`Agent()` 语法**：`tools` 字段中的 `Agent(worker, researcher)` 语法仅在主线程模式下生效，用于限制可派生的 subagent 类型。写在 subagent 定义中无效。
+
 ### 最佳实践
 
 - **一个 subagent 只做一件事**，保持职责单一

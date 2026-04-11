@@ -50,6 +50,50 @@ user-invocable: false
 
 ---
 
+## Agent 定义的两种运行模式与嵌套限制
+
+同一个 agent 定义文件可以在两种模式下运行，能力不同：
+
+| 运行模式 | 启动方式 | 身份 | 能否调用 Agent 工具 |
+|---------|---------|------|-------------------|
+| **主线程模式** | `claude --agent coordinator` | 主线程本身 | 能 |
+| **subagent 模式** | @mention、Agent 工具派生 | subagent | **不能** |
+
+### 嵌套限制
+
+**Subagent 不能派生其他 subagent。** `Agent()` 语法写在 subagent 定义中无效。需要嵌套委托时，用 Skill 或从主对话链式调用 subagent。
+
+```
+主线程（默认 Claude 或 --agent 启动的 agent）
+  └─ 可调用 Agent 工具派生 subagent ✅
+        └─ 不能再调用 Agent 工具 ❌
+```
+
+### `Agent()` 语法的适用范围
+
+`tools` 字段中的 `Agent(worker, researcher)` 语法**仅在主线程模式下生效**——限制该主线程可以派生哪些 subagent 类型：
+
+```yaml
+# coordinator 定义，通过 claude --agent coordinator 启动时生效
+tools: Agent(worker, researcher), Read, Bash
+```
+
+- 省略 `Agent`：主线程不能派生任何 subagent
+- `Agent`（无括号）：可派生任意 subagent
+- `Agent(a, b)`：只能派生 `a` 和 `b`
+
+### 用户调用 agent 的三种方式
+
+| 方式 | 示例 | 说明 |
+|------|------|------|
+| 自然语言 | `用 code-reviewer 看一下` | Claude 自行判断是否委托 |
+| @-mention | `@"code-reviewer (agent)" 审查认证模块` | 保证该 agent 运行 |
+| `--agent` | `claude --agent coordinator` | 整个会话以该 agent 身份运行（主线程模式） |
+
+前两种方式中，agent 作为 **subagent** 运行；第三种方式中，agent 作为**主线程**运行，具备派生 subagent 的能力。
+
+---
+
 ## 后台 Agent 调用 Skill 的权限问题
 
 ### 问题现象
