@@ -304,6 +304,7 @@ def update_readme_with_claude(logger: logging.Logger) -> None:
             cwd=REPO_DIR,
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=300,  # 5分钟超时
             creationflags=_CREATE_NO_WINDOW,
         )
@@ -337,6 +338,7 @@ def git_commit_and_push(synced: list[str], deleted: list[str], logger: logging.L
         cwd=REPO_DIR,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         creationflags=_CREATE_NO_WINDOW,
     )
     if result.returncode == 0:
