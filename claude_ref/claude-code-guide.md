@@ -354,6 +354,33 @@ permissionMode: bypassPermissions
 
 `batch-md-fmt`（调度层）→ `md-fmt-worker`（配置层）→ `md-fmt`（执行层）→ `md-img-local`（下游 skill）
 
+## 后台任务（Background Tasks）
+
+### Ctrl+B：放入后台
+
+按 `Ctrl+B` 可将当前正在执行的 Bash 命令或 agent 放到后台运行（tmux 用户需按两次）。
+
+### 相关快捷键
+
+| 快捷键 | 说明 |
+| --- | --- |
+| `Ctrl+B` | 将 Bash 命令或 agent 放入后台（tmux 用户按两次） |
+| `Ctrl+X Ctrl+K` | 终止所有后台 agent（3 秒内按两次确认） |
+| `Ctrl+T` | 切换显示 / 隐藏任务列表 |
+
+### 无"恢复前台"功能
+
+Claude Code **没有**将后台 agent 切换回前台的操作。后台任务的机制是：
+
+- 输出写入文件，Claude 通过 Read 工具读取
+- 任务完成后结果自动返回到主对话
+- 每个任务有唯一 ID 用于追踪
+- Claude Code 退出时后台任务自动清理
+
+想追踪进度，可用 `Ctrl+T` 查看任务列表，或直接问 Claude「后台任务现在怎样了」。
+
+> 来源：[Interactive mode - Claude Code Docs](https://code.claude.com/docs/en/interactive-mode)
+
 ## 工作目录
 
 Claude Code 的主工作目录在启动时由当前目录决定，会话中无法更改。如需切换主项目，应在目标目录重新启动 Claude Code。

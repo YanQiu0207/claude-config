@@ -33,7 +33,7 @@ Skills 运行时引用的规范和知识库文件，安装对应 skill 时需一
 
 | 文件 | 说明 | 被引用方 |
 |------|------|----------|
-| **markdown-zh.md** | 中文文案排版指南，定义中英混排、标点、空格等规范。 | md-zh |
+| **markdown-zh.md** | 中文文案排版指南，定义中英混排、标点、空格等规范。 | — |
 | **claude-code-guide.md** | Claude Code 使用技巧汇总，供 CLAUDE.md 中的知识库查询指令引用。 | CLAUDE.md |
 
 ## 全局指令（CLAUDE.md）
