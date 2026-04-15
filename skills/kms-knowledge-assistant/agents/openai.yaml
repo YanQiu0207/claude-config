@@ -1,0 +1,4 @@
+interface:
+  display_name: "KMS Knowledge Assistant"
+  short_description: "基于本地知识库的正式检索、问答与引用校验工作流工具"
+  default_prompt: "Use $kms-knowledge-assistant to answer from the local knowledge base with /ask, retrieve evidence with /search, and verify citations with /verify."

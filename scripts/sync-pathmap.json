@@ -9,12 +9,12 @@
       "target": "agents"
     },
     {
-      "source": "~/.claude/claude_ref",
-      "target": "claude_ref"
-    },
-    {
       "source": "~/.claude/CLAUDE.md",
       "target": "CLAUDE.md"
+    },
+    {
+      "source": "~/.ai-rules",
+      "target": ".ai-rules"
     }
   ]
 }

@@ -6,10 +6,14 @@
 
 | Skill | 说明 |
 |-------|------|
+| **batch-fuwari-post** | 批量将多个 Markdown 文件/目录迁移到 Fuwari 博客的 posts 目录，每篇以独立子目录组织（`posts/<slug>/index.md` + 同目录图片），并生成 frontmatter。 |
 | **batch-md-fmt** | 批量对多个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
 | **batch-md-lint** | 批量检查多个 Markdown 文件的排版规范。 |
 | **cc-adv-guide** | 【知识库】Claude Code 进阶指南，包含 Skills 与 Agents 的高级用法和设计模式。 |
+| **code-review-local** | 对本地代码目标（文件 / 目录 / 整个项目）进行多 agent 并行审核。 |
+| **fuwari-post** | 将一个 Markdown 源文件迁移到 Fuwari 博客的 posts 目录，并完成图片本地化和 frontmatter 生成。 |
 | **handoff** | 总结当前对话的日志，写入一个指定文件，方便跨会话传递上下文。 |
+| **kms-knowledge-assistant** | Use when Codex should answer user questions from the local personal knowledge base as a normal working skill, not as an API test. |
 | **md-fmt** | 对单个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
 | **md-img-local** | 将 Markdown 文件中的网络图片自动下载到本地 assets 目录，添加唯一前缀避免重名冲突，自动替换原文件中的图片链接为本地相对路径。 |
 | **md-lint** | 检查 Markdown 文件的排版是否符合指定规范文件，自动修复问题并输出总结。 |
@@ -23,9 +27,15 @@
 
 | Agent | 说明 |
 |-------|------|
+| **fuwari-post-worker** | 对单个 Markdown 文件执行 Fuwari 博客迁移（复制、frontmatter 生成、图片本地化），供 batch-fuwari-post 并行调度使用。 |
 | **md-fmt-worker** | 对单个 Markdown 文件执行一站式标准化处理（排版 + 图片本地化），供 batch-md-fmt 并行调度使用。 |
 | **md-lint-worker** | 对单个 Markdown 文件执行排版检查与修复，供 batch-md-lint 并行调度使用。 |
 | **resume-reviewer** | 审核和评估简历，并提供修改建议。 |
+| **reviewer-bug** | 对指定代码目标（文件/目录/项目）进行 bug 与逻辑缺陷审核，只报告明显的功能性缺陷。 |
+| **reviewer-compliance** | 对指定代码目标（文件/目录/项目）进行 CLAUDE.md 合规性审核，仅报告违反 CLAUDE.md 规则的代码。 |
+| **reviewer-quality** | 对指定代码目标（文件/目录/项目）进行代码质量与可维护性审核，关注重复、复杂度、耦合、命名、抽象。 |
+| **reviewer-security** | 对指定代码目标（文件/目录/项目）进行安全漏洞审核，对照 OWASP Top 10 等常见漏洞类别。 |
+| **reviewer-test** | 对指定代码目标（文件/目录/项目）进行测试覆盖与可测性审核，关注关键路径是否有测试、测试是否真正验证行为、生产代码是否易测试。 |
 
 ## 参考文件（claude_ref）
 
@@ -38,7 +48,7 @@ Skills 运行时引用的规范和知识库文件，安装对应 skill 时需一
 
 ## 全局指令（CLAUDE.md）
 
-Claude Code 的全局行为配置，定义沟通语言（中文）、事实性内容必须有来源支撑的要求、写代码前的确认流程（确认设计方案、开发计划、参与人数）、代码风格（4 空格缩进）、Claude Code 参考知识库路径、中文 Markdown 排版规范路径（通过 `md-zh` 技能）、记忆与知识写入规则（全局 vs. 项目的持久化位置）、创建或修改技能时先调用 `cc-adv-guide` 获取设计规范等。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
+Claude Code 的全局行为配置，涵盖：称呼约定（统一称用户为「靓仔」）、沟通语言（中文）、事实性内容必须有来源支撑的要求、任务分流（单文件小修直接执行，多文件多阶段任务按阶段制走）、工程强制规则（日志完整性、防腐层、参数可配置、敏感信息脱敏等）、协作底线（多 agent 分工与进度表述规范）、写代码前必须先确认设计方案与开发计划、代码风格（4 空格缩进）、Claude Code 参考知识库路径、中文 Markdown 排版规范（通过 `md-zh` 技能）、记忆与知识写入规则（全局 vs. 项目的持久化位置）、创建或修改技能时先调用 `cc-adv-guide`、复杂项目按模板在 `dev-run/` 下建立治理文档。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
 
 ## 目录结构
 
@@ -48,6 +58,7 @@ claude-config/
 ├── claude_ref/      # 参考文件（排版规范、知识库等）
 ├── scripts/         # 路径同步脚本
 ├── skills/          # 技能定义
+├── .ai-rules/       # AI 辅助规则（交付工作流、工程规范等）
 ├── .githooks/       # Git 钩子配置（开发用）
 ├── .gitignore       # Git 忽略规则
 └── CLAUDE.md        # 全局指令
@@ -66,6 +77,7 @@ cd claude-config
 cp -r skills/* ~/.claude/skills/
 cp -r agents/* ~/.claude/agents/
 cp -r claude_ref/* ~/.claude/claude_ref/
+cp -r .ai-rules/* ~/.ai-rules/
 
 # CLAUDE.md 包含全局指令，本地已有则不要覆盖，请手动合并
 cp -n CLAUDE.md ~/.claude/CLAUDE.md
@@ -80,6 +92,7 @@ cd claude-config
 Copy-Item -Recurse skills\* $env:USERPROFILE\.claude\skills\
 Copy-Item -Recurse agents\* $env:USERPROFILE\.claude\agents\
 Copy-Item -Recurse claude_ref\* $env:USERPROFILE\.claude\claude_ref\
+Copy-Item -Recurse .ai-rules\* $env:USERPROFILE\.ai-rules\
 
 # CLAUDE.md 包含全局指令，本地已有则不要覆盖，请手动合并
 if (-not (Test-Path $env:USERPROFILE\.claude\CLAUDE.md)) {
@@ -119,14 +132,29 @@ batch-md-lint ──── md-lint-worker (agent)
 
 resume-reviewing ── resume-reviewer (agent)
 
+fuwari-post ─────── （独立，无依赖）
+
+batch-fuwari-post ── fuwari-post-worker (agent)
+                         └── fuwari-post (skill)
+
+code-review-local ─┬── reviewer-compliance (agent)
+                   ├── reviewer-bug (agent)
+                   ├── reviewer-security (agent)
+                   ├── reviewer-quality (agent)
+                   └── reviewer-test (agent)
+
 cc-adv-guide ────── （知识库，无依赖）
+
+kms-knowledge-assistant ── （独立，无依赖）
 ```
 
 - `md-lint` 依赖 `md-zh` skill（中文排版规范知识库）；`md-fmt` 依赖 `md-lint` 和 `md-img-local` skill。
 - `batch-md-fmt` 通过 `md-fmt-worker` agent 并行调用 `md-fmt`。
 - `batch-md-lint` 通过 `md-lint-worker` agent 并行调用 `md-lint`。
 - `resume-reviewing` 依赖 `resume-reviewer` agent 进行简历审核。
-- `md-zh`、`cc-adv-guide` 为知识库型 skill，无依赖，由其他 skill 或 CLAUDE.md 引用调用；其余 skill（`handoff`、`md-img-local`、`pdf2md`、`skill-del`、`skill-rename`）可独立使用。
+- `batch-fuwari-post` 通过 `fuwari-post-worker` agent 并行调用 `fuwari-post`；`fuwari-post` 独立使用，无 skill 依赖。
+- `code-review-local` 通过 5 个 reviewer agent 并行审查 CLAUDE.md 合规、bug、安全、质量、测试五个维度。
+- `md-zh`、`cc-adv-guide` 为知识库型 skill，无依赖，由其他 skill 或 CLAUDE.md 引用调用；其余 skill（`fuwari-post`、`handoff`、`kms-knowledge-assistant`、`md-img-local`、`pdf2md`、`skill-del`、`skill-rename`）可独立使用。
 
 ## 开发设置
 
