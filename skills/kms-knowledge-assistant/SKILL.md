@@ -1,6 +1,14 @@
 ---
 name: kms-knowledge-assistant
-description: Use when Codex should answer user questions from the local personal knowledge base as a normal working skill, not as an API test. Trigger for requests like "查一下我的知识库", "根据我的笔记回答", "从本地知识库找资料", or "用个人知识库支持当前任务". The skill uses the local kms-api at http://127.0.0.1:49153 and prefers /ask for answer generation, /search for retrieval-only tasks, and /verify for citation checks.
+description: Use when the assistant should answer user questions from the local personal knowledge base as a normal working skill, not as an API test. Trigger for requests like "查一下我的知识库", "根据我的笔记回答", "从本地知识库找资料", or "用个人知识库支持当前任务". Do NOT trigger for generic coding, open-domain or real-time questions, or when the user explicitly asks to answer without consulting notes. The skill uses the local kms-api at http://127.0.0.1:49153 and prefers /ask for answer generation, /search for retrieval-only tasks, and /verify for citation checks.
+argument-hint: "[可选：问题关键词]"
+allowed-tools:
+  - Bash(curl *)
+  - Read
+  - Write
+  - Grep
+  - Glob
+  - Skill
 ---
 
 # KMS Knowledge Assistant
@@ -10,6 +18,20 @@ description: Use when Codex should answer user questions from the local personal
 默认服务：
 
 - `http://127.0.0.1:49153`
+
+## 不适用场景
+
+- 问题与本地知识库明显无关：通用编程知识、开放域常识、实时信息、代码生成、Bug 排查、环境配置等，不要触发本 skill。
+- 用户只是请求直接作答，既没有提到"我的知识库 / 我的笔记 / 个人资料"，问题本身也不属于私有领域时，不要触发。
+- 用户明确说"不要查知识库 / 凭你自己回答 / 不要查本地资料"时，不要触发，即使问题看起来像私有知识也不例外。
+- 任务是写代码、运行命令、操作文件、排查系统错误时，不要把本 skill 作为搜索入口。
+
+## 服务可用性
+
+- 默认不做主动探活，直接调用 `/ask` / `/search` / `/verify`。
+- 若首次调用出现连接被拒、超时、`Connection refused`、`Failed to connect`、或任何 5xx，视为本地 KMS 服务未运行，立即停止调用接口，明确告知用户："本地 KMS 服务未启动，请先运行 `python E:/github/mykms/scripts/start_kms.py`"，不要改口用自己的知识强答。
+- 该服务当前没有 `/healthz` 端点（返回 404）；若确有必要探活，用 `GET /docs` 返回 200 作为存活判据，不要依赖 `/healthz`。
+- 连接失败不视为"拒答"，不要按 `abstained=true` 的路径处理，也不要自动补 `/search`。
 
 ## 使用原则
 
@@ -45,12 +67,18 @@ description: Use when Codex should answer user questions from the local personal
 - 除非出现拒答、用户明确要求检索结果、或第一次 query 明显写偏，否则不要补 `/search`，也不要再次调用 `/ask`
 - 回复末尾追加整个 skill 的总耗时，统计范围包含接口调用、原文补读和答案组织
 
-示例：
+示例（默认方式：heredoc 管道）：
 
 ```bash
 curl -s http://127.0.0.1:49153/ask \
   -H 'Content-Type: application/json; charset=utf-8' \
-  --data-binary @E:/github/mykms/scripts/ask-context.json
+  --data-binary @- <<'EOF'
+{
+  "question": "上下文处理包括什么？",
+  "queries": ["上下文处理 包括 什么", "知识库 RAG 结果"],
+  "rerank_top_k": 6
+}
+EOF
 ```
 
 ### 2. 只查资料
@@ -64,7 +92,13 @@ curl -s http://127.0.0.1:49153/ask \
 ```bash
 curl -s http://127.0.0.1:49153/search \
   -H 'Content-Type: application/json; charset=utf-8' \
-  --data-binary @E:/github/mykms/scripts/search-context.json
+  --data-binary @- <<'EOF'
+{
+  "queries": ["上下文处理 包括 什么", "知识库 RAG 结果"],
+  "recall_top_k": 20,
+  "rerank_top_k": 6
+}
+EOF
 ```
 
 ### 3. 引用校验
@@ -77,7 +111,12 @@ curl -s http://127.0.0.1:49153/search \
 ```bash
 curl -s http://127.0.0.1:49153/verify \
   -H 'Content-Type: application/json; charset=utf-8' \
-  --data-binary @E:/github/mykms/scripts/verify-context.json
+  --data-binary @- <<'EOF'
+{
+  "answer": "上下文处理可以包括多轮对话记忆、知识库 RAG 结果、提示词和工作流上游输出 [54fd84d561bd824b18153cc1a2a65ff36e83add1]。",
+  "used_chunk_ids": ["54fd84d561bd824b18153cc1a2a65ff36e83add1"]
+}
+EOF
 ```
 
 ## 查询策略
@@ -136,15 +175,16 @@ curl -s http://127.0.0.1:49153/verify \
 - 默认不要把原文理解成“整个知识库全文”；补读范围仍应绑定在 `/ask` 命中的文件和主题上。
 - 若补读发现 `/ask` 漏了同一文档中的并列项，回答中应直接整合这些内容，不必把 chunk 和原文人为拆成两套答案。
 
-## Git Bash 建议
+## 请求构造方式
 
-- 不要在命令行里手写中文 JSON。
-- 始终使用 `--data-binary @file.json`。
-- 可直接复用仓库里的请求样例：
-  - `E:/github/mykms/scripts/ask-context.json`
-  - `E:/github/mykms/scripts/ask-vector-clock.json`
-  - `E:/github/mykms/scripts/search-context.json`
-  - `E:/github/mykms/scripts/verify-context.json`
+- **默认方式：heredoc 管道**。用 `curl --data-binary @- <<'EOF' ... EOF` 把 JSON 直接通过 stdin 传给 curl，不写临时文件。
+  - 必须用带单引号的 `<<'EOF'`，避免 shell 对 `$`、反引号、反斜杠做变量展开。
+  - Git Bash 的 heredoc 以 UTF-8 字节流写入 stdin，中文可靠透传。
+  - `--data-binary` 保留原始字节，不要换成 `-d`（`-d` 会吞换行并可能做 URL 编码）。
+  - 必须带 `-H 'Content-Type: application/json; charset=utf-8'`。
+- **备选方式：临时文件**。仅当 JSON 很长、包含大量转义、或 heredoc 出现编码异常时，再写文件并用 `--data-binary @file.json`。
+- **禁止**在命令行 `-d '...'` 里直接手写中文 JSON：Windows 下 argv 的 GBK 转换会导致服务端收到乱码。
+- 仓库里的历史样例文件（`E:/github/mykms/scripts/ask-context.json` 等）仅作参考，不强制使用。
 
 ## 参考
 

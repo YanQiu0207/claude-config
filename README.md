@@ -13,7 +13,7 @@
 | **code-review-local** | 对本地代码目标（文件 / 目录 / 整个项目）进行多 agent 并行审核。 |
 | **fuwari-post** | 将一个 Markdown 源文件迁移到 Fuwari 博客的 posts 目录，并完成图片本地化和 frontmatter 生成。 |
 | **handoff** | 总结当前对话的日志，写入一个指定文件，方便跨会话传递上下文。 |
-| **kms-knowledge-assistant** | Use when Codex should answer user questions from the local personal knowledge base as a normal working skill, not as an API test. |
+| **kms-knowledge-assistant** | Use when the assistant should answer user questions from the local personal knowledge base as a normal working skill, not as an API test. |
 | **md-fmt** | 对单个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
 | **md-img-local** | 将 Markdown 文件中的网络图片自动下载到本地 assets 目录，添加唯一前缀避免重名冲突，自动替换原文件中的图片链接为本地相对路径。 |
 | **md-lint** | 检查 Markdown 文件的排版是否符合指定规范文件，自动修复问题并输出总结。 |
