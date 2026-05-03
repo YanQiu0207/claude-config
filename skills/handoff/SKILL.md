@@ -38,9 +38,21 @@ allowed-tools:
 
 以下操作**无需用户确认**，直接执行：
 
-- 搜索/扫描 `~/.claude/handoffs/` 目录（Glob）
 - 新建文件（目标文件不存在时）
 - 读取文件内容（Read）
+- 调用 `scripts/handoff.py` 执行 `list`、`read`、`del` 的确定性文件操作（Bash）
+
+## 脚本化命令
+
+`/handoff list`、`/handoff read <filename>`、`/handoff del <filename>` 由脚本处理，避免让大模型参与确定性文件操作。
+
+脚本实现：[scripts/handoff.py](scripts/handoff.py)
+
+调用时使用：
+
+```bash
+python "$HOME/.claude/skills/handoff/scripts/handoff.py" <command> [args]
+```
 
 ## 命令
 
@@ -126,8 +138,16 @@ allowed-tools:
 
 #### 处理流程
 
+直接调用脚本：
+
+```bash
+python "$HOME/.claude/skills/handoff/scripts/handoff.py" list
+```
+
+脚本负责：
+
 1. 扫描 `~/.claude/handoffs/` 目录
-2. 对每个 `.md` 文件，读取前几行提取标题和创建时间
+2. 对每个 `.md` 文件，读取标题、创建时间、项目目录
 3. 按修改时间倒序排列
 4. 输出列表
 
@@ -160,9 +180,17 @@ allowed-tools:
 
 #### 处理流程
 
-1. **解析 filename**：取用户提供的 filename，若不以 `.md` 结尾则自动补上 `.md`
-2. **读取文件**：读取 `~/.claude/handoffs/<filename>.md`
-3. **直接输出**：将文件原始内容原封不动地输出，不做任何摘要或改写
+直接调用脚本：
+
+```bash
+python "$HOME/.claude/skills/handoff/scripts/handoff.py" read <filename>
+```
+
+脚本负责：
+
+1. 解析 filename，若不以 `.md` 结尾则自动补上 `.md`
+2. 读取 `~/.claude/handoffs/<filename>.md`
+3. 将文件原始内容原封不动地输出，不做任何摘要或改写
 
 如果文件不存在，输出：
 
@@ -176,24 +204,29 @@ allowed-tools:
 
 #### 处理流程
 
-1. **解析 filename**：取用户提供的 filename，若不以 `.md` 结尾则自动补上 `.md`
-2. **检查文件是否存在**：
-   - 文件不存在：直接输出提示，终止流程
-     ```
-     文件不存在：~/.claude/handoffs/<filename>.md
-     ```
-3. **向用户确认**：展示文件路径，明确告知将永久删除，要求输入确认
+1. 先调用脚本检查文件并输出确认提示：
+
+   ```bash
+   python "$HOME/.claude/skills/handoff/scripts/handoff.py" del <filename>
+   ```
+
+2. 脚本输出：
+
    ```
    即将删除文件：~/.claude/handoffs/<filename>.md
    此操作不可逆，文件内容将永久丢失。
 
-   请输入 "确认删除" 以继续，或任意其他内容取消操作。
+   请重新执行并添加 --yes 以确认删除。
    ```
-4. **检查确认内容**：
-   - 用户未输入"确认删除"：输出"操作已取消。"，终止流程
-   - 用户输入"确认删除"：执行删除
-5. **执行删除**：使用 Bash 工具删除文件
-6. **输出结果**：
+
+3. 只有用户明确要求继续删除时，才调用：
+
+   ```bash
+   python "$HOME/.claude/skills/handoff/scripts/handoff.py" del <filename> --yes
+   ```
+
+4. 输出结果：
+
    ```
    已删除：~/.claude/handoffs/<filename>.md
    ```

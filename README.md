@@ -168,6 +168,14 @@ qiaomu-anything-to-notebooklm ── （独立，无依赖）
 english-learn ──────── md-zh (skill)
 
 download-source ─────── （独立，无依赖）
+
+handoff ─────────────── （独立，无依赖）
+
+skill-del ───────────── （独立，无依赖）
+
+skill-rename ────────── （独立，无依赖）
+
+pdf2md ──────────────── （独立，无依赖）
 ```
 
 - `md-lint` 依赖 `md-zh` skill（中文排版规范知识库）；`md-fmt` 依赖 `md-lint` 和 `md-img-local` skill。
