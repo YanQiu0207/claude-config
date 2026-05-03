@@ -4,11 +4,12 @@ description: Use when the assistant should answer user questions from the local 
 argument-hint: "[可选：问题关键词]"
 allowed-tools:
   - Bash(curl *)
+  - Bash(echo *)
   - Read
   - Write
   - Grep
   - Glob
-  - Skill
+  - Edit
 ---
 
 # KMS Knowledge Assistant
@@ -67,18 +68,24 @@ allowed-tools:
 - 除非出现拒答、用户明确要求检索结果、或第一次 query 明显写偏，否则不要补 `/search`，也不要再次调用 `/ask`
 - 回复末尾追加整个 skill 的总耗时，统计范围包含接口调用、原文补读和答案组织
 
-示例（默认方式：heredoc 管道）：
+示例（默认方式：Write 工具写临时文件 + 单行 curl）：
 
-```bash
-curl -s http://127.0.0.1:49153/ask \
-  -H 'Content-Type: application/json; charset=utf-8' \
-  --data-binary @- <<'EOF'
+第 0 步（每次进入 skill 只做一次）：用 Bash 运行 `echo "$(date +%s%3N)_$RANDOM"` 取一个 `时间戳_随机数` 作为本次 `<suffix>`，例如 `1713200123456_8432`。
+
+第 1 步：用 `Write` 工具把下面的 JSON 写入 `$TMPDIR/kms-knowledge-assistant/ask.<suffix>.json`。Write 必须传 Windows 绝对路径，当前环境形如 `C:/Users/YanQi/AppData/Local/Temp/kms-knowledge-assistant/ask.<suffix>.json`；Write 会自动创建父目录。
+
+```json
 {
   "question": "上下文处理包括什么？",
   "queries": ["上下文处理 包括 什么", "知识库 RAG 结果"],
   "rerank_top_k": 6
 }
-EOF
+```
+
+第 2 步：调用接口（严格保持**单行**，不要用反斜杠续行，也不要用 heredoc）：
+
+```bash
+curl -s http://127.0.0.1:49153/ask -H 'Content-Type: application/json; charset=utf-8' --data-binary @/tmp/kms-knowledge-assistant/ask.<suffix>.json
 ```
 
 ### 2. 只查资料
@@ -87,18 +94,24 @@ EOF
 - 阅读返回的 `results`
 - 按需继续追问或改写 query
 
-示例：
+示例（同样走 Write 工具 + 单行 curl）：
 
-```bash
-curl -s http://127.0.0.1:49153/search \
-  -H 'Content-Type: application/json; charset=utf-8' \
-  --data-binary @- <<'EOF'
+第 0 步（与 ask 共用，每次进入 skill 只做一次）：用 Bash 运行 `echo "$(date +%s%3N)_$RANDOM"` 取 `<suffix>`。
+
+第 1 步：用 `Write` 工具写入 `C:/Users/YanQi/AppData/Local/Temp/kms-knowledge-assistant/search.<suffix>.json`：
+
+```json
 {
   "queries": ["上下文处理 包括 什么", "知识库 RAG 结果"],
   "recall_top_k": 20,
   "rerank_top_k": 6
 }
-EOF
+```
+
+第 2 步：
+
+```bash
+curl -s http://127.0.0.1:49153/search -H 'Content-Type: application/json; charset=utf-8' --data-binary @/tmp/kms-knowledge-assistant/search.<suffix>.json
 ```
 
 ### 3. 引用校验
@@ -106,17 +119,23 @@ EOF
 - 当已经拿到答案和 `chunk_id` 时
 - 调用 `/verify`
 
-示例：
+示例（同样走 Write 工具 + 单行 curl）：
+
+第 0 步（与 ask 共用，每次进入 skill 只做一次）：用 Bash 运行 `echo "$(date +%s%3N)_$RANDOM"` 取 `<suffix>`。
+
+第 1 步：用 `Write` 工具写入 `C:/Users/YanQi/AppData/Local/Temp/kms-knowledge-assistant/verify.<suffix>.json`：
+
+```json
+{
+  "answer": "上下文处理可以包括多轮对话记忆、知识库 RAG 结果、提示词和工作流上游输出 [chunk_id]。",
+  "used_chunk_ids": ["chunk_id"]
+}
+```
+
+第 2 步：
 
 ```bash
-curl -s http://127.0.0.1:49153/verify \
-  -H 'Content-Type: application/json; charset=utf-8' \
-  --data-binary @- <<'EOF'
-{
-  "answer": "上下文处理可以包括多轮对话记忆、知识库 RAG 结果、提示词和工作流上游输出 [54fd84d561bd824b18153cc1a2a65ff36e83add1]。",
-  "used_chunk_ids": ["54fd84d561bd824b18153cc1a2a65ff36e83add1"]
-}
-EOF
+curl -s http://127.0.0.1:49153/verify -H 'Content-Type: application/json; charset=utf-8' --data-binary @/tmp/kms-knowledge-assistant/verify.<suffix>.json
 ```
 
 ## 查询策略
@@ -177,13 +196,22 @@ EOF
 
 ## 请求构造方式
 
-- **默认方式：heredoc 管道**。用 `curl --data-binary @- <<'EOF' ... EOF` 把 JSON 直接通过 stdin 传给 curl，不写临时文件。
-  - 必须用带单引号的 `<<'EOF'`，避免 shell 对 `$`、反引号、反斜杠做变量展开。
-  - Git Bash 的 heredoc 以 UTF-8 字节流写入 stdin，中文可靠透传。
+- **默认方式：Write 工具写临时文件 + 单行 curl**。
+  - 临时文件统一放在系统临时目录下的 `$TMPDIR/kms-knowledge-assistant/` 子目录，**不要放到 skill 目录下**。skill 目录只承载定义，不放运行期数据。
+  - Git Bash 下 `$TMPDIR` 展开为 `/tmp`，curl 端直接写 `/tmp/kms-knowledge-assistant/...` 即可；实际 Windows 路径为 `C:/Users/<user>/AppData/Local/Temp/kms-knowledge-assistant/`。
+  - Write 工具不展开环境变量，调用 Write 时必须给 Windows 绝对路径（形如 `C:/Users/<user>/AppData/Local/Temp/kms-knowledge-assistant/<文件名>`）。若不确定具体路径，先用 Bash 运行 `(cd "$TMPDIR" && pwd -W)` 获取。
+  - 文件名格式：`<op>.<ts>_<rnd>.json`。`<op>` ∈ {`ask`, `search`, `verify`}；`<ts>` 为毫秒时间戳，`<rnd>` 为随机数，**每次进入 skill 时先跑一次** `echo "$(date +%s%3N)_$RANDOM"` 取值，形如 `1713200123456_8432`。毫秒时间戳 + 随机数，Bash 原生即可生成，提供足够的并发区分度。
+  - 同一次 skill 运行内，三种 `<op>` 共用同一个 `<suffix>`。
+  - 每次直接写新文件即可，不做清理；系统临时目录会自然回收。保留文件也利于复盘失败请求。
+  - 用 `Write` 工具写 JSON 文件（UTF-8，中文透传可靠，Write 会自动创建父目录）。
+  - curl 命令必须严格保持**单行**，不要用反斜杠续行，也不要嵌入换行；否则 Claude Code 权限引擎会按换行把命令拆成多个子命令逐段匹配，导致 `Bash(curl *)` 预授权失效、每次都要审批。
+  - 命令模板：`curl -s <url> -H 'Content-Type: application/json; charset=utf-8' --data-binary @/tmp/kms-knowledge-assistant/<op>.<suffix>.json`。
   - `--data-binary` 保留原始字节，不要换成 `-d`（`-d` 会吞换行并可能做 URL 编码）。
   - 必须带 `-H 'Content-Type: application/json; charset=utf-8'`。
-- **备选方式：临时文件**。仅当 JSON 很长、包含大量转义、或 heredoc 出现编码异常时，再写文件并用 `--data-binary @file.json`。
+- **备选方式：heredoc 管道**（`curl --data-binary @- <<'EOF' ... EOF`）。仅在确实无法使用 Write 工具、且用户愿意为每次调用点审批时使用；此方式每次都会触发 Bash 审批弹窗，不适合默认路径。
 - **禁止**在命令行 `-d '...'` 里直接手写中文 JSON：Windows 下 argv 的 GBK 转换会导致服务端收到乱码。
+- **禁止**用 `echo '...JSON...' | curl ...` 这类管道方式：管道会让 Claude Code 权限引擎按段拆分命令，`Bash(curl *)` 预授权失效，每次都会弹审批。
+- **禁止**把临时文件写回 skill 目录下（如 `<SKILL_DIR>/.tmp/`）。
 - 仓库里的历史样例文件（`E:/github/mykms/scripts/ask-context.json` 等）仅作参考，不强制使用。
 
 ## 参考

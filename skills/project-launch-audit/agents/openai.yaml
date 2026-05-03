@@ -1,0 +1,7 @@
+interface:
+  display_name: "Project Launch Audit"
+  short_description: "Audit launch readiness, risk, and maintainability."
+  default_prompt: "Use $project-launch-audit to audit this project with parallel read-only reviewers."
+
+policy:
+  allow_implicit_invocation: true

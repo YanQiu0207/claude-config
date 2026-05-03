@@ -1,0 +1,15 @@
+# download-source skill 依赖
+
+# HTTP / 解析
+requests>=2.31
+beautifulsoup4>=4.12
+lxml>=4.9
+pyyaml>=6.0
+python-slugify>=8.0
+
+# 本地文件转换
+markitdown[all]==0.1.5
+ebooklib>=0.18
+
+# 视频/音频下载
+yt-dlp>=2024.1.1
