@@ -25,7 +25,7 @@
 | **md-zh** | 【知识库】中文 Markdown 排版规范，供 md-lint、md-fmt 等技能内部引用。 |
 | **pdf2md** | 将 PDF 忠实转换为 Markdown，最大限度保留原文内容、顺序、层级、列表、链接、图示位置与页面信息。 |
 | **project-launch-audit** | Audit a repository, design package, or new project for launch readiness. |
-| **qiaomu-anything-to-notebooklm** | 多源内容智能处理器：支持微信公众号、网页、YouTube、播客（小宇宙/喜马拉雅）、PDF、Markdown 等，自动上传到 NotebookLM 并生成播客/PPT/思维导图等多种格式。 |
+| **qiaomu-anything-to-notebooklm** | 多源内容智能处理器：支持微信公众号、网页、YouTube、播客（小宇宙/喜马拉雅）、PDF、Markdown 等，自动上传到 NotebookLM 并生成播客/PPT/思维导图等多种格式。支持深度分析模式和飞书文档自动创建。 |
 | **resume-reviewing** | 用于检查、润色和优化简历内容，提升表达质量。 |
 | **skill-del** | 安全删除 skill，自动扫描并处理所有依赖关系（其他 skill、agent 中的引用），确保删除后系统一致。 |
 | **skill-rename** | 为 skill 改名，同时自动检查和更新所有依赖关系。 |
