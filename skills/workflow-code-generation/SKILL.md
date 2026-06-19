@@ -3,6 +3,8 @@ name: workflow-code-generation
 description: 代码文件修改的统一入口。当用户请求任何代码变更（新功能、优化、Bug 修复、重构）时必须首先调用此 skill。仅适用于代码文件（如 .cc/.cpp/.h/.go/.py 等），修改 .md 等非代码文件时不需要调用。它会评估复杂度、检查 spec.md、生成 tasks.md、并逐个任务执行。
 ---
 
+Using workflow-code-generation
+
 # 代码生成
 
 > 所有代码修改的统一入口。**先加载规范，再写代码。**

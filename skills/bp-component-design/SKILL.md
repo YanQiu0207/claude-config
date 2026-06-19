@@ -3,6 +3,8 @@ name: bp-component-design
 description: 提供组件级设计原则，包括类/模块设计、接口设计、数据模型、并发模型、错误处理。在系统设计阶段讨论组件详细设计时使用，或在 code review 中评估组件质量时使用。
 ---
 
+Using bp-component-design
+
 # 组件设计
 
 > **使用场景**：`workflow-system-design` skill 在讨论 spec.md **4.2 组件设计** 时加载本 skill。

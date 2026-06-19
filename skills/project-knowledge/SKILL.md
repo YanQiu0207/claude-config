@@ -3,6 +3,8 @@ name: project-knowledge
 description: 项目知识沉淀规范。定义项目文档的目录结构、spec 生命周期与归档约定、架构文档维护方式。当需要创建新文档或询问「某类文档放哪里」时参考此 skill。
 ---
 
+Using project-knowledge
+
 # 项目知识沉淀规范
 
 ## 加载时机

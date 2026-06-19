@@ -3,6 +3,8 @@ name: bp-performance-optimization
 description: 提供性能优化方法论、设计原则和具体优化规则。在编写代码、优化性能瓶颈、进行 code review 时使用，涵盖 CPU、内存、I/O、并发等维度。
 ---
 
+Using bp-performance-optimization
+
 # 性能优化技术
 
 ## 前置检查

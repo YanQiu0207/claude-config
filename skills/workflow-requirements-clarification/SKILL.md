@@ -3,6 +3,8 @@ name: workflow-requirements-clarification
 description: 需求澄清。只负责明确"要解决什么问题"，生成 spec.md 的前三章节（背景、目标、需求）。禁止在本阶段讨论设计方案——设计是 workflow-system-design skill 的职责。
 ---
 
+Using workflow-requirements-clarification
+
 # 需求澄清
 
 ## 核心定位

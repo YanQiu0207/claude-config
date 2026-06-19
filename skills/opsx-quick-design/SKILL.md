@@ -3,6 +3,8 @@ name: opsx-quick-design
 description: OpenSpec 轻量级设计工作流，适用于内部工具、小型服务等不需要完整 spec 流程的场景。AI 可主动提出设计方案，产出 Quick Draft 的 proposal.md。
 ---
 
+Using opsx-quick-design
+
 # OpenSpec 快速设计
 
 ## 适用场景 vs 不适用场景

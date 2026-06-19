@@ -3,6 +3,8 @@ name: bp-distributed-systems
 description: 提供分布式系统设计 best practices（对应常见 fallacies）及各 SDLC 阶段 checklist。当需求涉及网络通信、多节点协调、数据一致性、故障恢复时使用。
 ---
 
+Using bp-distributed-systems
+
 # 分布式系统设计原则
 
 > **触发条件**：需求涉及以下任一场景时应加载此 skill：

@@ -3,6 +3,8 @@ name: opsx-system-design
 description: OpenSpec 系统设计。当 proposal.md 已完整但 design.md 不存在或为空时调用。按 design.md 章节顺序逐个与用户讨论，每轮只处理一个 section。
 ---
 
+Using opsx-system-design
+
 # OpenSpec 系统设计
 
 ## 核心定位

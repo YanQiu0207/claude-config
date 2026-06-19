@@ -3,6 +3,8 @@ name: workflow-system-design
 description: 系统设计。当 spec.md 前三章节（背景、目标、需求）已完整但设计章节为空时调用。按 spec.md 章节顺序逐个与用户讨论，每轮只处理一个 section。
 ---
 
+Using workflow-system-design
+
 # 系统设计
 
 ## 核心定位

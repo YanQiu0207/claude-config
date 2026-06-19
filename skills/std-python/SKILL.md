@@ -3,6 +3,8 @@ name: std-python
 description: 提供 Python 编码规范（基于 Google Python Style Guide）。当编写或 review Python 代码（.py 文件）时使用。
 ---
 
+Using std-python
+
 # Python 编码规范
 
 > 基于 [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html)，类型注解规则参考 [PEP 484](https://peps.python.org/pep-0484/) 和 [PEP 585](https://peps.python.org/pep-0585/)。默认兼容 Python 3.8+；项目明确要求更高版本时，按项目版本使用对应语法。

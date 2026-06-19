@@ -3,6 +3,8 @@ name: workflow-code-review
 description: 代码评审。协调 5 个专项 reviewer subagent 对代码进行并行多维度审查。可由用户直接触发，也可由主 agent 加载后作为 Judge 执行。
 ---
 
+Using workflow-code-review
+
 # Multi-Agent Code Review
 
 你是 **Judge**——编排流程、去重分诊、最终裁决、输出报告。你不是 reviewer，不产出 finding。

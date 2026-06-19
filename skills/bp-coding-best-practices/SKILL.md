@@ -3,6 +3,8 @@ name: bp-coding-best-practices
 description: 通用编码最佳实践。在编写或 review 代码时使用。涵盖可读性、命名、函数设计、控制流、资源安全、注释规范。
 ---
 
+Using bp-coding-best-practices
+
 # 通用编码最佳实践
 
 **设计原则（SOLID、设计模式）**：参见 `bp-component-design` Skill

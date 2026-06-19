@@ -3,6 +3,8 @@ name: workflow-test-generation
 description: 测试生成。基于 spec.md 或被测代码，生成单元测试、集成测试、性能测试。当用户请求生成测试、TDD 模式、或 workflow-code-generation 完成后触发。
 ---
 
+Using workflow-test-generation
+
 # 测试生成
 
 ## Step 0: 意图识别与路径路由

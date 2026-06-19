@@ -3,6 +3,8 @@ name: opsx-code-generation
 description: OpenSpec 代码生成。代码文件修改的统一入口，适用于 openspec 工作流。读取 openspec/changes/<change-name>/ 下的 proposal.md 和 design.md，生成 tasks.md，并逐个任务执行。
 ---
 
+Using opsx-code-generation
+
 # OpenSpec 代码生成
 
 > 所有代码修改的统一入口。**先加载规范，再写代码。**

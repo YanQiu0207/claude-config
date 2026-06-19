@@ -3,6 +3,8 @@ name: std-go
 description: 提供 Go 编码规范（基于 Google Go Style Guide）。当编写或 review Go 代码（.go 文件）时使用。
 ---
 
+Using std-go
+
 # Go 编码规范
 
 > 基于 Google Golang 代码规范，结合实际工程经验进行了调整和补充。
