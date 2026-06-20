@@ -3,7 +3,7 @@ name: workflow-code-generation
 description: 代码文件修改的统一入口。当用户请求任何代码变更（新功能、优化、Bug 修复、重构）时必须首先调用此 skill。仅适用于代码文件（如 .cc/.cpp/.h/.go/.py 等），修改 .md 等非代码文件时不需要调用。它会评估复杂度、检查 spec.md、生成 tasks.md、并逐个任务执行。
 ---
 
-Using workflow-code-generation
+> 输出一行：`Using workflow-code-generation`
 
 # 代码生成
 
@@ -21,13 +21,18 @@ Using workflow-code-generation
 
 #### Fast-Path 执行
 
+0. **采集基线（仅当存在 `verify.config.json`）**：动代码前，加载 `workflow-verification` skill，运行 `verify.py --save-baseline .verify/baseline.json`；无配置文件则跳过。
 1. 加载编码规范（同步骤 4）
 2. 实现改动
 3. 执行过程中发现实际需要改多个文件 → **立即退出**，回到步骤 2 进入标准流程
 4. 询问用户是否需要 code review
    - **需要** → 加载 `workflow-code-review` skill（指定 `skip_reviewers: [magical-prompt-reviewer]`）→ 修复循环
-   - **不需要** → 输出改动说明
-5. **结束**，不进入后续步骤
+   - **不需要** → 跳过 review，进入 4.5
+4.5. **门禁验证（仅当存在 `verify.config.json` 或 `.verify/baseline.json`）**：code review 完成（或用户选择不 review）后，加载 `workflow-verification` skill。触发规则：只要「config 或 baseline 其中之一存在」就必须运行门禁，防止通过删除 config 绕过已采集的基线。
+   - `.verify/baseline.json` 存在 → `verify.py --baseline .verify/baseline.json`（config 不存在时脚本自动报 ERROR）
+   - 仅 `verify.config.json` 存在（首次引入配置）→ `verify.py`（无基线绝对校验）
+   - 退出码 0：进入步骤 5；退出码 1（FAIL，有新增违规）：修复后重跑；退出码 2（ERROR，门禁自身故障）：**停止交付**，排查 config/工具/基线后再跑。**门禁通过前禁止向用户汇报完成。**
+5. 输出改动说明，**结束**，不进入后续步骤
 
 #### 标准流程入口
 
@@ -37,6 +42,8 @@ Using workflow-code-generation
 - 不存在/不完整 → **调用 `workflow-requirements-clarification`**（禁止自行澄清）
 
 **强制**：`spec.md` 与 `tasks.md` 同时存在时，编码前必须完整读取两者。
+
+**查开发导航**：若存在 `docs/architecture/dev-map.md`，编码前先查——定位功能落点、影响链路、既有写法，避免重复造轮子；落点变化后回写 dev-map。
 
 ### 步骤 2：选定当前任务
 
@@ -73,7 +80,15 @@ Using workflow-code-generation
 
 ### 步骤 5：逐个任务实现
 
-**核心规则：一个 Task → review 通过 → 报告 → 等用户批准 → 下一个 Task**
+**核心规则：一个 Task → review 通过 → 门禁通过 → 报告 → 等用户批准 → 下一个 Task**
+
+#### Phase 0: 采集验证基线（仅当存在 `verify.config.json`）
+
+若项目根存在 `verify.config.json`，在**动代码前**采集基线，供 Phase 2.5 对比：加载 `workflow-verification` skill，按其说明运行 `verify.py --save-baseline .verify/baseline.json`（脚本在该 skill 目录，不在项目根）。
+
+> ⚠️ **信任前提**：verify.config.json 中的命令会以 shell 执行。在你自己的仓库中可直接运行；如果你在审查外部 PR 或分支，且 `verify.config.json` 包含未经审查的变更，**必须先人工确认其命令安全**再允许本 Phase 执行。
+
+无 `verify.config.json` 时跳过本 Phase（对存量项目无侵入）。
 
 #### Phase 1: 实现
 
@@ -109,6 +124,22 @@ Using workflow-code-generation
 - 每条发现的问题、修复方式和犯错原因
 - 最终 PASS 的 review 报告
 
+#### Phase 2.5: 客观门禁验证（仅当 `verify.config.json` 或 `.verify/baseline.json` 其一存在）
+
+Code Review PASS 后、汇报前，跑 verify 门禁做客观判定。触发条件：**config 或 baseline 任意一个存在即运行**——防止通过删除 config 绕过已采集的基线。加载 `workflow-verification` skill，按其说明运行（脚本在该 skill 目录，不在项目根）：
+
+- 若 `.verify/baseline.json` **存在**（Phase 0 已采集）→ `verify.py --baseline .verify/baseline.json`（config 不存在时脚本返回 ERROR，阻止交付）
+- 若 `.verify/baseline.json` **不存在**（本次变更新增配置，Phase 0 跳过）→ `verify.py`（无基线绝对校验）
+
+外部 PR 场景需确认 verify.config.json 内容可信再执行。
+
+- 门禁 **PASS**（退出码 0）→ 进入 Phase 3。
+- 门禁 **FAIL**（退出码 1，有新增违规）→ 回到 Phase 2 修复循环，修掉违规后重跑门禁，直到 PASS。
+- 门禁 **ERROR**（退出码 2，工具缺失/基线损坏/配置漂移/config 缺失等）→ **停止交付**，不进入 Phase 3，也不按「新增违规」修代码；先排查配置/工具/基线问题，修复后重跑验证。
+- 两者均不存在时跳过本 Phase。
+
+> 基线对比只追究本次改动**新增**的违规；历史遗留项不阻塞，但本次不得放大。
+
 #### Phase 3: 汇报 → 停止等待
 
 如本 Task 完成后触发文档同步条件，先按 `project-knowledge` 更新对应文档或保留未完成任务。
@@ -131,6 +162,10 @@ Using workflow-code-generation
 
 **Review 轮次**: [第 K 轮通过]
 [附 workflow-code-review 输出的报告]
+
+### 门禁结果（若启用 verify）
+
+[附 verify 摘要：PASS / 新增违规及修复；未启用则标注 N/A]
 
 ---
 

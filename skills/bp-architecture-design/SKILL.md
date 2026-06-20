@@ -3,7 +3,7 @@ name: bp-architecture-design
 description: 提供架构设计原则，包括模块划分、依赖管理、数据架构、接口设计。在系统设计阶段讨论方案概览时使用，或在 code review 中评估架构合理性时使用。
 ---
 
-Using bp-architecture-design
+> 输出一行：`Using bp-architecture-design`
 
 # 架构设计
 

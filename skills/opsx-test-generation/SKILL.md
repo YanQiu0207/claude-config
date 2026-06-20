@@ -3,7 +3,7 @@ name: opsx-test-generation
 description: OpenSpec 测试生成。基于 design.md 的测试计划章节或被测代码，生成单元测试、集成测试、性能测试。当用户请求生成测试、TDD 模式、或 opsx-code-generation 完成后触发。
 ---
 
-Using opsx-test-generation
+> 输出一行：`Using opsx-test-generation`
 
 # OpenSpec 测试生成
 

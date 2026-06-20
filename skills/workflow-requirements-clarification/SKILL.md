@@ -3,7 +3,7 @@ name: workflow-requirements-clarification
 description: 需求澄清。只负责明确"要解决什么问题"，生成 spec.md 的前三章节（背景、目标、需求）。禁止在本阶段讨论设计方案——设计是 workflow-system-design skill 的职责。
 ---
 
-Using workflow-requirements-clarification
+> 输出一行：`Using workflow-requirements-clarification`
 
 # 需求澄清
 
@@ -84,6 +84,8 @@ Using workflow-requirements-clarification
 ## 工作流程
 
 ### Step 0: 评估复杂度并创建 spec
+
+> **先看历史**：若存在 `docs/design-docs/TASKBOARD.md`，先读一遍，判断本需求是否旧需求的延续、有无类似任务做过、相关 spec 在哪——避免「新需求把旧设计冲掉」或重复造轮子。
 
 | 复杂度 | 信号 | 处理方式 |
 |--------|------|----------|

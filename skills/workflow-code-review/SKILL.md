@@ -3,7 +3,7 @@ name: workflow-code-review
 description: 代码评审。协调 5 个专项 reviewer subagent 对代码进行并行多维度审查。可由用户直接触发，也可由主 agent 加载后作为 Judge 执行。
 ---
 
-Using workflow-code-review
+> 输出一行：`Using workflow-code-review`
 
 # Multi-Agent Code Review
 

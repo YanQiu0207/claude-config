@@ -3,7 +3,7 @@ name: std-cpp
 description: 提供 C++ 编码规范（基于 Google C++ Style Guide）。当编写或 review C++ 代码（.cc/.cpp/.h 文件）时使用。
 ---
 
-Using std-cpp
+> 输出一行：`Using std-cpp`
 
 # C++ 编码规范
 

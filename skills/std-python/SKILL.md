@@ -3,7 +3,7 @@ name: std-python
 description: 提供 Python 编码规范（基于 Google Python Style Guide）。当编写或 review Python 代码（.py 文件）时使用。
 ---
 
-Using std-python
+> 输出一行：`Using std-python`
 
 # Python 编码规范
 

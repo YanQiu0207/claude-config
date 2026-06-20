@@ -3,7 +3,7 @@ name: bp-skill-authoring
 description: 指导编写和改进 Agent Skill 文件（SKILL.md），涵盖 YAML frontmatter、精简写作、渐进式披露、常用模式。当用户要创建新 Skill、改进现有 SKILL.md、或询问 Skill 编写规范时使用。
 ---
 
-Using bp-skill-authoring
+> 输出一行：`Using bp-skill-authoring`
 
 # 编写 Agent Skills
 

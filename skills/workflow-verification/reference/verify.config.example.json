@@ -1,0 +1,54 @@
+{
+  "_comment": "verify 门禁配置示例。按项目实际技术栈替换每个 check 的 command。三类 type 对应文章的 A(静态规范)/B(交付门槛)/C(工程一致性)。forbid_pattern 的命令必须使用 -H（保留文件路径）而非 -h，输出格式为「文件:匹配内容」，这样删除旧文件的同名违规、在新文件新增同名违规时才能被追踪；同时不输出行号，避免行号漂移把历史违规误判为新增。",
+
+  "checks": [
+    {
+      "name": "A-forbid-messagebox",
+      "_note": "A 类·静态规范：禁止直接调用 MessageBox.Show（示例）。命令命中的每行算一处违规。",
+      "type": "forbid_pattern",
+      "command": "grep -rHo --include=*.cs \"MessageBox\\.Show\" src/",
+      "baseline_aware": true
+    },
+    {
+      "name": "A-forbid-chinese-in-xaml",
+      "_note": "A 类·静态规范：禁止 XAML 出现中文字符（示例，需支持 -P 的 grep）。",
+      "type": "forbid_pattern",
+      "command": "grep -rHoP --include=*.xaml \"[\\x{4e00}-\\x{9fff}]+\" src/",
+      "baseline_aware": true
+    },
+    {
+      "name": "B-build",
+      "_note": "B 类·交付门槛：编译必须通过。按项目改成 dotnet build / go build / make 等。",
+      "type": "exit_code",
+      "command": "go build ./...",
+      "expect_code": 0,
+      "baseline_aware": false
+    },
+    {
+      "name": "B-tests-pass",
+      "_note": "B 类·交付门槛：测试必须全部通过。",
+      "type": "exit_code",
+      "command": "pytest -q",
+      "expect_code": 0,
+      "baseline_aware": false
+    },
+    {
+      "name": "B-test-count-not-decrease",
+      "_note": "B 类·交付门槛：测试数量不能异常减少（抓偷删测试）。direction=not_decrease 表示改动后必须 >= 基线。threshold=0 是无基线时的最低保障（有基线时 threshold 不生效）。注意：count 命令必须在「零匹配」场景下也以 exit=0 退出，否则会被判为 error；grep 无匹配时返回 exit=1，故需 || true（POSIX）使其始终退出 0，stdout 为空则 line_count 计为 0。",
+      "type": "count",
+      "command": "grep -rHo \"def test_\" tests/ || true",
+      "metric": "line_count",
+      "direction": "not_decrease",
+      "baseline_aware": true,
+      "threshold": 0
+    },
+    {
+      "name": "C-cs-files-in-csproj",
+      "_note": "C 类·工程一致性：自定义脚本校验 .cs 是否都进了 .csproj，返回非 0 即不一致。",
+      "type": "exit_code",
+      "command": "python scripts/check_csproj.py",
+      "expect_code": 0,
+      "baseline_aware": false
+    }
+  ]
+}

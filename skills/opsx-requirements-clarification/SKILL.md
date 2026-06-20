@@ -3,7 +3,7 @@ name: opsx-requirements-clarification
 description: OpenSpec 需求澄清。初始化变更目录 openspec/changes/<change-name>/，生成 .openspec.yaml、proposal.md 和 specs/<capability>/spec.md。只负责明确「要解决什么问题」，禁止在本阶段讨论设计方案。
 ---
 
-Using opsx-requirements-clarification
+> 输出一行：`Using opsx-requirements-clarification`
 
 # OpenSpec 需求澄清
 

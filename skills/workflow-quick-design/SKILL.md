@@ -3,7 +3,7 @@ name: workflow-quick-design
 description: 轻量级设计工作流，适用于内部工具、小型服务等不需要完整 spec 流程的场景。AI 可主动提出设计方案，产出简化版 spec.md（Quick Draft）。
 ---
 
-Using workflow-quick-design
+> 输出一行：`Using workflow-quick-design`
 
 # 快速设计
 

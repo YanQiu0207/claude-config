@@ -3,7 +3,7 @@ name: opsx-project-knowledge
 description: OpenSpec 项目知识沉淀规范。定义 openspec 目录结构、变更生命周期与归档约定、架构文档维护方式。当需要创建新变更目录或询问「某类文档放哪里」时参考此 skill。
 ---
 
-Using opsx-project-knowledge
+> 输出一行：`Using opsx-project-knowledge`
 
 # OpenSpec 项目知识沉淀规范
 

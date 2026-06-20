@@ -3,7 +3,7 @@ name: self-refinement
 description: 将纠错经验沉淀为持久化的 Rules/Skills 更新，构建反馈闭环。当被用户纠正且错误具有模式性时自动触发，或通过 /reflect 命令手动触发回顾。
 ---
 
-Using self-refinement
+> 输出一行：`Using self-refinement`
 
 # 经验沉淀 (Self-Refinement)
 

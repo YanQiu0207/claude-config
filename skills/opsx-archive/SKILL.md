@@ -3,7 +3,7 @@ name: opsx-archive
 description: OpenSpec 变更归档。将 openspec/changes/<change-name>/ 整目录移动到 openspec/changes/archive/YYYY-MM-DD-<change-name>/，并更新 .openspec.yaml 状态为 Archived。由 /opsx-archive 命令触发。
 ---
 
-Using opsx-archive
+> 输出一行：`Using opsx-archive`
 
 # OpenSpec 变更归档
 
