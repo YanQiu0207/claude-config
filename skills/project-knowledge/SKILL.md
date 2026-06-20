@@ -13,8 +13,6 @@ description: 项目知识沉淀规范。定义项目文档的目录结构、spec
 - 功能交付、任务完成、准备归档 spec 时加载
 - 改动涉及新模块、接口变更、架构变更或重大技术选型时加载
 - 用户询问项目架构、ADR、spec 归档或文档应放在哪里时加载
-- 新需求立项、或需要了解项目历史任务时加载（看 `TASKBOARD.md`）
-- 改代码需要定位功能落点 / 影响链路时加载（看 `dev-map.md`）
 
 ## 目录结构约定
 
@@ -22,12 +20,10 @@ description: 项目知识沉淀规范。定义项目文档的目录结构、spec
 docs/
 ├── architecture/                    # 项目级架构文档（常青）
 │   ├── overview.md                  # 系统全貌（必须有）
-│   ├── dev-map.md                   # 开发导航：功能落点与影响链路（推荐）
 │   └── <subsystem>.md               # 子系统专项（按需）
 ├── adr/                             # 架构决策记录（可选，推荐）
 │   └── NNN-<title>.md               # 例：001-choose-message-queue.md
 └── design-docs/                     # Feature Spec（按功能创建）
-    ├── TASKBOARD.md                 # 跨 feature 任务总览（项目级，单文件）
     └── <module>/
         └── <feature>/
             ├── spec.md              # 需求 + 设计文档
@@ -59,11 +55,6 @@ Quick Draft → Approved → Archived
 - `overview.md`：系统全貌，1-2 页内，可在 10 分钟内读完
   - 内容：系统边界、核心模块、数据流、主要技术栈
   - 不记录「当初为什么这么选」——这属于 ADR
-- `dev-map.md`：**开发导航地图**——偏代码落点，回答「改这个功能该动哪些文件」
-  - 内容：功能 → 落点文件、配置定义位置、模块改动的影响链路、项目既有写法 / 惯例
-  - 与 `overview.md` 的分工：overview 偏架构全貌（是什么），dev-map 偏代码落点（在哪改）
-  - 维护：**谁动代码谁更新**——`workflow-code-generation` 改码前先查、落点变化后回写
-  - 仓库大时可按子系统拆成多份，每份封面写清管哪一片
 - `<subsystem>.md`：各子系统的设计细节（按需创建）
 
 **维护时机**：每当一个功能 spec 的状态变为 `Approved` 且涉及架构变更时，必须同步更新 `architecture/`。
@@ -93,30 +84,12 @@ Quick Draft → Approved → Archived
 - 确立团队编码约定
 - 选择某个有显著权衡的架构模式
 
----
-
-## 跨 feature 任务看板（`docs/design-docs/TASKBOARD.md`）
-
-项目级的任务总览（单文件），让新需求进来时能一眼看到历史，避免「新需求把旧设计冲掉」、重复造轮子。
-
-- **记什么**：每个 feature 的名称、状态（对齐 spec 生命周期）、当前阶段、spec 目录、一句话交付结论
-- **谁维护**：
-  - `workflow-requirements-clarification` 澄清**前先读** TASKBOARD，判断是否旧需求延续、有无类似历史
-  - `workflow-code-generation` 任务完成 / spec 归档时，更新对应行
-- **粒度**：一个 feature 一行；不替代各 feature 自己的 `tasks.md`（那是任务级，看板是 feature 级）
-
-模板见 [reference/taskboard_template.md](reference/taskboard_template.md)。
-
----
-
 ## 文档与代码的同步原则
 
 | 变更类型 | 需要更新的文档 |
 |---------|--------------|
-| 新需求立项 | 在 `design-docs/TASKBOARD.md` 新增一行 |
-| 功能开发完成 | spec.md 状态改为 `Archived`；更新 `design-docs/TASKBOARD.md` 对应行 |
+| 功能开发完成 | spec.md 状态改为 `Archived` |
 | 涉及新模块或接口变更 | `architecture/overview.md`（或对应子系统文档） |
-| 功能落点 / 影响链路变化 | `architecture/dev-map.md` |
 | 重大架构选型或方向调整 | 新建一条 ADR |
 | 编码规范变更 | 对应 `std-*` skill 文件 |
 | 工程流程变更 | 对应 `workflow-*` skill 文件 |
