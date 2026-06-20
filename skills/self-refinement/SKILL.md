@@ -1,6 +1,6 @@
 ---
 name: self-refinement
-description: 将纠错经验沉淀为持久化的 Rules/Skills 更新，构建反馈闭环。当被用户纠正且错误具有模式性时自动触发，或通过 /reflect 命令手动触发回顾。
+description: 将纠错经验沉淀为持久化的 Rules/Skills 更新，构建反馈闭环。低频自动触发：仅当用户明确纠正 AI，且该纠正暴露出可复用、跨会话可能重复的错误模式时，在完成当前任务后给出沉淀建议；普通澄清、否定、语气不满、一次性偏好或任务改向不触发。也可通过 /reflect 手动触发回顾。
 ---
 
 > 输出一行：`Using self-refinement`
