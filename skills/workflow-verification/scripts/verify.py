@@ -4,6 +4,8 @@
 读取 verify.config.json，执行其中定义的检查，产出结构化报告。
 支持改动前后的基线对比：只把「相对基线新增」的违规判为失败，
 从而把「是不是这次引入的」从口头辩解变成两份报告的差集。
+同时内置 spec drift 检查：改了代码但规格 / 任务 / ADR 没更新时，
+必须提供「无需更新原因」。
 
 用法：
     # 改动前：采集基线
@@ -16,8 +18,8 @@
     python verify.py
 
 退出码：
-    0 = 全部通过 / 无配置 / 采集基线成功
-    1 = 存在（新增）违规
+    0 = 全部通过 / 采集基线成功
+    1 = 存在（新增）违规或 spec drift
     2 = 配置或运行错误
 """
 
@@ -50,6 +52,33 @@ class CheckResult:
 
 
 _DEFAULT_TIMEOUT = 60  # 秒；防止卡死命令永久阻塞验证流程
+_CODE_SUFFIXES = {
+    ".c",
+    ".cc",
+    ".cpp",
+    ".cs",
+    ".go",
+    ".h",
+    ".hpp",
+    ".java",
+    ".js",
+    ".jsx",
+    ".kt",
+    ".mjs",
+    ".py",
+    ".rs",
+    ".sh",
+    ".bat",
+    ".cmd",
+    ".ps1",
+    ".psm1",
+    ".psd1",
+    ".ts",
+    ".tsx",
+}
+_CODE_FILE_NAMES = {"dockerfile", "makefile"}
+_SPEC_FILE_NAMES = {"spec.md", "ui-spec.md", "tasks.md"}
+_DOC_SUFFIXES = {".md", ".mdx"}
 
 
 class CommandTimeout(Exception):
@@ -99,6 +128,145 @@ def run_command(command: str, timeout: int = _DEFAULT_TIMEOUT) -> tuple[int, str
 
 def _nonempty_lines(text: str) -> list[str]:
     return [line.strip() for line in text.splitlines() if line.strip()]
+
+
+def _git_lines(args: list[str]) -> tuple[int, list[str], str]:
+    """Run git and return non-empty stdout lines."""
+    proc = subprocess.run(
+        ["git", *args],
+        capture_output=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    return proc.returncode, _nonempty_lines(proc.stdout), proc.stderr.strip()
+
+
+def _changed_files(diff_base: str) -> tuple[list[str], list[str], str | None]:
+    """Return tracked and untracked changed files relative to diff_base."""
+    code, tracked, err = _git_lines(["diff", "--name-only", diff_base, "--"])
+    if code != 0:
+        return [], [], err or f"git diff failed with exit={code}"
+    code, untracked, err = _git_lines(
+        ["ls-files", "--others", "--exclude-standard"]
+    )
+    if code != 0:
+        return [], [], err or f"git ls-files failed with exit={code}"
+    return sorted(set(tracked)), sorted(set(untracked)), None
+
+
+def _is_code_file(path_text: str) -> bool:
+    path = Path(path_text)
+    suffix = path.suffix.lower()
+    if suffix in _CODE_SUFFIXES:
+        return True
+    if path.name.lower() in _CODE_FILE_NAMES:
+        return True
+    return (
+        "scripts" in {part.lower() for part in path.parts}
+        and suffix not in _DOC_SUFFIXES
+    )
+
+
+def _is_spec_file(path_text: str) -> bool:
+    path = Path(path_text)
+    parts = {part.lower() for part in path.parts}
+    name = path.name.lower()
+    if name in _SPEC_FILE_NAMES:
+        return True
+    if path.suffix.lower() in _DOC_SUFFIXES and parts.intersection({"adr", "adrs"}):
+        return True
+    return False
+
+
+def evaluate_spec_drift(diff_base: str, reason: str) -> CheckResult:
+    """Require an explicit reason when code changed but specs/tasks/ADR did not."""
+    tracked, untracked, error = _changed_files(diff_base)
+    if error:
+        return CheckResult(
+            "Z-spec-drift",
+            "spec_drift",
+            "error",
+            f"无法读取 git diff：{error}",
+        )
+
+    changed = sorted(set(tracked + untracked))
+    code_files = [path for path in changed if _is_code_file(path)]
+    spec_files = [path for path in tracked if _is_spec_file(path)]
+    untracked_spec_files = [path for path in untracked if _is_spec_file(path)]
+    related_spec_files = _related_spec_files(code_files, spec_files)
+    value = {
+        "diff_base": diff_base,
+        "code_files": code_files,
+        "spec_files": spec_files,
+        "untracked_spec_files": untracked_spec_files,
+        "related_spec_files": related_spec_files,
+        "reason": reason,
+    }
+    if not code_files:
+        return CheckResult(
+            "Z-spec-drift",
+            "spec_drift",
+            "pass",
+            "无代码文件变更",
+            value=value,
+        )
+    if related_spec_files:
+        return CheckResult(
+            "Z-spec-drift",
+            "spec_drift",
+            "pass",
+            f"代码变更 {len(code_files)} 个，相关规格类文件已更新 {len(related_spec_files)} 个",
+            value=value,
+        )
+    if reason.strip():
+        return CheckResult(
+            "Z-spec-drift",
+            "spec_drift",
+            "pass",
+            "代码已变更但规格类文件未变更；已提供无需更新原因",
+            value=value,
+        )
+    return CheckResult(
+        "Z-spec-drift",
+        "spec_drift",
+        "fail",
+        "改了代码，但未能证明相关 spec.md / ui-spec.md / tasks.md / ADR 已更新；"
+        "请补更新，或通过 --spec-drift-reason 写明无需更新原因",
+        value=value,
+    )
+
+
+def _related_spec_files(code_files: list[str], spec_files: list[str]) -> list[str]:
+    """Return spec files that can be mechanically tied to changed code files."""
+    related: set[str] = set()
+    for spec_file in spec_files:
+        path = Path(spec_file)
+        if path.name.lower() == "tasks.md":
+            try:
+                body = path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            for code_file in code_files:
+                if code_file in body or Path(code_file).as_posix() in body:
+                    related.add(spec_file)
+                    break
+        if path.name.lower() in {"spec.md", "ui-spec.md"}:
+            feature_dir = path.parent
+            if any(
+                _is_relative_to(Path(code_file), feature_dir)
+                for code_file in code_files
+            ):
+                related.add(spec_file)
+    return sorted(related)
+
+
+def _is_relative_to(path: Path, parent: Path) -> bool:
+    """Python 3.8 compatible Path.is_relative_to."""
+    try:
+        path.relative_to(parent)
+        return True
+    except ValueError:
+        return False
 
 
 _VALID_DIRECTIONS = {"not_decrease", "not_increase"}
@@ -388,7 +556,7 @@ def load_config(path: Path, require: bool = False) -> dict:
     """读配置。
 
     不存在时：
-    - require=False（无基线模式）→ 静默跳过，exit 0（对存量项目无侵入）。
+    - require=False（无基线模式）→ 返回空 checks，仅跑内置门禁。
     - require=True（--baseline / --save-baseline 模式）→ exit 2，已有基线的验证场景
       配置缺失属于门禁本身故障，不能视为"跳过"。
     """
@@ -397,8 +565,8 @@ def load_config(path: Path, require: bool = False) -> dict:
             print(f"[verify] 配置文件不存在：{path}；"
                   "--baseline/--save-baseline 模式下配置必须存在（不能静默跳过）。", file=sys.stderr)
             sys.exit(2)
-        print(f"[verify] 未找到配置 {path}，跳过门禁（对存量项目无侵入）。")
-        sys.exit(0)
+        print(f"[verify] 未找到配置 {path}，仅运行内置门禁。")
+        return {"checks": []}
     try:
         config = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
@@ -463,7 +631,13 @@ def cmd_save_baseline(config: dict, out_path: Path) -> int:
     return 0
 
 
-def cmd_verify(config: dict, baseline_path: Path | None, report_path: Path) -> int:
+def cmd_verify(
+    config: dict,
+    baseline_path: Path | None,
+    report_path: Path,
+    diff_base: str,
+    spec_drift_reason: str,
+) -> int:
     """跑全部检查，对 baseline_aware 项做基线对比，产出报告。"""
     # 显式传了 --baseline 但文件不存在 → fail-closed，不能静默降级为无基线模式
     if baseline_path is not None and not baseline_path.exists():
@@ -527,7 +701,9 @@ def cmd_verify(config: dict, baseline_path: Path | None, report_path: Path) -> i
                 return 2
         # stored_by_name 中未出现的 check → 本次新增，以绝对模式执行，无需 rebaseline。
 
-    results: list[CheckResult] = []
+    results: list[CheckResult] = [
+        evaluate_spec_drift(diff_base, spec_drift_reason)
+    ]
     for check in config.get("checks", []):
         name = check.get("name", "<unnamed>")
         base_entry = None
@@ -586,6 +762,7 @@ def cmd_verify(config: dict, baseline_path: Path | None, report_path: Path) -> i
         "total": len(results),
         "errors": len(errors),
         "violations": len(violations),
+        "spec_drift": asdict(results[0]) if results else None,
         "results": [asdict(r) for r in results],
     }
     try:
@@ -619,6 +796,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--save-baseline", metavar="PATH", help="采集基线并写入该路径")
     parser.add_argument("--baseline", metavar="PATH", help="对比用的基线路径")
     parser.add_argument("--report", default=".verify/report.json", help="结构化报告输出路径")
+    parser.add_argument(
+        "--diff-base",
+        default="HEAD",
+        help="spec drift 检查的 git diff 基准，默认 HEAD",
+    )
+    parser.add_argument(
+        "--spec-drift-reason",
+        default="",
+        help="代码变更但无需更新 spec / ui-spec / tasks / ADR 时的原因",
+    )
     args = parser.parse_args(argv)
 
     require_config = bool(args.save_baseline or args.baseline)
@@ -628,7 +815,13 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_save_baseline(config, Path(args.save_baseline))
 
     baseline_path = Path(args.baseline) if args.baseline else None
-    return cmd_verify(config, baseline_path, Path(args.report))
+    return cmd_verify(
+        config,
+        baseline_path,
+        Path(args.report),
+        args.diff_base,
+        args.spec_drift_reason,
+    )
 
 
 if __name__ == "__main__":

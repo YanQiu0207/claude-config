@@ -1,6 +1,6 @@
 ---
 name: workflow-code-review
-description: 代码评审。协调 5 个专项 reviewer subagent 对代码进行并行多维度审查。可由用户直接触发，也可由主 agent 加载后作为 Judge 执行。
+description: 代码评审。按风险档位协调 reviewer subagent 进行并行多维度审查：小需求可轻量审，高风险才全量 5 维 + critic。可由用户直接触发，也可由主 agent 加载后作为 Judge 执行。
 ---
 
 > 输出一行：`Using workflow-code-review`
@@ -9,22 +9,33 @@ description: 代码评审。协调 5 个专项 reviewer subagent 对代码进行
 
 你是 **Judge**——编排流程、去重分诊、最终裁决、输出报告。你不是 reviewer，不产出 finding。
 
+## Review 档位
+
+| 档位 | 适用 | 调用 reviewer |
+| --- | --- | --- |
+| `lightweight` | 小需求 / 低风险：单模块局部改动、不改公开接口、不碰数据 / 权限 / 并发 / 安全 / 性能关键路径 | `comprehensive-reviewer`（一趟覆盖工程规范 + 需求符合度两维） |
+| `standard` | 默认档：普通功能、Bug 修复、跨 2-3 个模块但风险可控 | `standards-reviewer`、`spec-compliance-reviewer`、`robustness-reviewer` |
+| `strict` | 高风险：生产关键路径、安全 / 权限 / 数据迁移 / 并发 / 分布式 / 性能敏感 / 公共 API / 大范围重构 | 全量 5 reviewer；有 finding 时调用 `review-critic` |
+
+调用方可显式传入 `review_profile: lightweight|standard|strict`。未传入时按范围和风险自行判定；无法判断时用 `standard`，命中高风险任一条件时用 `strict`。
+
 ## Subagent 清单
 
 | 角色 | subagent_name | 调用方式 |
 |------|---------------|----------|
-| 性能审查 | `performance-reviewer` | 始终调用 |
-| 健壮性审查 | `robustness-reviewer` | 始终调用 |
-| 工程规范审查 | `standards-reviewer` | 始终调用 |
-| 契约与信任链审查 | `magical-prompt-reviewer` | 始终调用 |
-| 需求/设计符合度审查 | `spec-compliance-reviewer` | 始终调用 |
-| 对抗性验证 | `review-critic` | 有 finding 时调用 |
+| 轻量综合审查 | `comprehensive-reviewer` | 仅 `lightweight` 调用（一趟覆盖工程规范 + 需求符合度两维） |
+| 性能审查 | `performance-reviewer` | `strict` 调用；性能敏感任务在 `standard` 中也可加入 |
+| 健壮性审查 | `robustness-reviewer` | `standard` / `strict` 调用 |
+| 工程规范审查 | `standards-reviewer` | `standard` / `strict` 调用 |
+| 契约与信任链审查 | `magical-prompt-reviewer` | `strict` 调用；涉及 prompt / 外部工具 / 权限边界时必须加入 |
+| 需求/设计符合度审查 | `spec-compliance-reviewer` | `standard` / `strict` 调用 |
+| 对抗性验证 | `review-critic` | `strict` 有 finding 时调用；`standard` 出现 P0 / P1 finding 时调用 |
 
 ## 工作流
 
 ### 1. 解析 review 范围
 
-根据用户输入确定审查文件和 diff 来源。若范围不清，先澄清再继续。
+根据用户输入确定审查文件、diff 来源和 `review_profile`。若范围不清，先澄清再继续。
 
 - 指定文件/spec/task → 直接使用
 - 给出 git diff/commit → 解析变更文件
@@ -34,14 +45,14 @@ description: 代码评审。协调 5 个专项 reviewer subagent 对代码进行
 
 - 在 `docs/design-docs/` 下搜索相关 `spec.md` 和 `tasks.md`
 - 确定审查文件、上下文文件（caller/callee/接口定义）
-- 根据文件类型和目录确定适用 skill
+- 根据文件类型和目录确定适用 skill；若目录结构或 spec.md 显示 DDD 分层（adapter / domain / application / infrastructure），将 `bp-cola-ddd` 加入 `{skill_list}` 传入 `standards-reviewer` 和 `spec-compliance-reviewer`；若改动涉及架构边界 / 模块划分或组件接口 / 数据模型设计，相应将 `bp-architecture-design` / `bp-component-design` 加入 `{skill_list}`
 - 提炼与本次 review 相关的 spec/task 摘要
 
 ### 3. 并行分派 reviewer
 
-**并行**调用 reviewer subagent。**必须等待所有 reviewer subagent 返回后才能进入 Step 4**——禁止主 agent 自己产出 finding。
+按 `review_profile` **并行**调用对应 reviewer subagent。**必须等待本档位所有 reviewer subagent 返回后才能进入 Step 4**——禁止主 agent 自己产出 finding。
 
-**跳过列表**：调用方可在请求中通过 `skip_reviewers: [name1, name2]` 指定要跳过的 reviewer。未指定时全部调用。
+**跳过 / 追加列表**：调用方可在请求中通过 `skip_reviewers: [name1, name2]` 跳过某些 reviewer，或通过 `extra_reviewers: [name1]` 给当前档位追加 reviewer。未指定时按 `review_profile` 调用。
 
 每个 reviewer 的 prompt 按以下模板构建：
 
@@ -80,6 +91,16 @@ description: 代码评审。协调 5 个专项 reviewer subagent 对代码进行
 
 ## 📋 Reviewer 意见汇总
 
+> 只列本档位实际调用的 reviewer 分节。`lightweight` 档仅 `comprehensive-reviewer` 一节。
+
+### 轻量综合审查 (comprehensive-reviewer，仅 lightweight 档)
+
+- **F-1** [P1 · 需求符合度]
+  - **位置**: `file:line`
+  - **问题**: [一句话问题摘要]
+  - **证据**: [支撑该问题的关键代码片段/数据/逻辑推理]
+- 💡 **Handoff notes**: [发现的超出轻量档的高风险线索 + 是否建议升档，无则省略此行]
+
 ### 性能审查 (performance-reviewer)
 
 - **F-1** [P1]
@@ -104,7 +125,7 @@ description: 代码评审。协调 5 个专项 reviewer subagent 对代码进行
 
 （同上格式，无 finding 则显示"✅ 无发现"）
 
-### 契约与信任链审查 (magical-prompt-reviewer)
+### 契约与信任链审查 (magical-prompt-reviewer，如本档位调用)
 
 （同上格式）
 
@@ -115,9 +136,9 @@ description: 代码评审。协调 5 个专项 reviewer subagent 对代码进行
 ---
 ```
 
-### 5. 调用 critic & 输出 Critic 意见
+### 5. 按档位调用 critic & 输出 Critic 意见
 
-将所有 finding 送 critic 做对抗性验证。调用 `review-critic` subagent，**必须等待 critic subagent 返回后才能进入 Step 6**——禁止主 agent 自己做对抗性验证：
+仅在以下情况调用 `review-critic` subagent：`strict` 档有 finding，或 `standard` 档出现 P0 / P1 finding。`lightweight` 档默认不调用 critic，除非 Judge 判断 finding 影响面超出小需求边界，应升级为 `standard` 或 `strict` 后重审。需要调用 critic 时，**必须等待 critic subagent 返回后才能进入 Step 6**——禁止主 agent 自己做对抗性验证：
 
 ```
 [Issue 列表]

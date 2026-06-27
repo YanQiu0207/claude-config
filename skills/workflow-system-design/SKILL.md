@@ -65,6 +65,7 @@ AI 通过提问帮助用户发现问题和权衡：
 |------|----------|
 | `bp-architecture-design` Skill | 讨论 4.1 方案概览时加载 |
 | `bp-component-design` Skill | 讨论 4.2 组件设计时加载 |
+| `bp-cola-ddd` Skill | 讨论 4.1 方案概览，需求涉及多外部依赖、业务规则较多或需要 DDD 分层隔离时加载，指导分层结构与 gateway 边界决策 |
 | `bp-distributed-systems` Skill | 涉及网络通信、多节点协调、数据一致性、故障恢复时加载 |
 | `bp-performance-optimization` Skill | 4.3 核心逻辑完成后加载，优化性能方面的设计考量 |
 | `workflow-test-generation` Skill | 讨论 7. 测试计划时加载 |
@@ -231,11 +232,13 @@ AI："4.2.3 数据模型这个 section，你的需求涉及新的数据结构吗
 
 ## 设计完成后
 
+**前端分支检查**：spec.md 涉及前端 UI（新页面 / 新组件 / 用户操作路径 / `.tsx` 产物）时，进入编码前**先调用 `workflow-frontend-design`** 生成 `ui-spec.md`，再回到本流程。这与 `workflow-quick-design` 的前端分支对齐，避免到 `workflow-code-generation` 步骤 2 才因缺少 ui-spec 被动停下。
+
 ```
 spec.md 设计部分已完成。
 
 你可以：
-- 说"开始编码"进入 code generation 阶段
+- 说"开始编码"进入 code generation 阶段（涉及前端 UI 时先走 /frontend-design 生成 ui-spec.md）
 - 说"先写测试"进入 TDD 模式
 - 如果某个 section 需要修改，告诉我具体哪个
 ```
