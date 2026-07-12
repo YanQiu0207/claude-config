@@ -20,6 +20,8 @@ model: inherit
 
 ### 第二步：系统化调查
 
+调查前先查 `docs/arch-snapshots/<module>/`：`vcs_ref` 与当前版本库一致的快照直接作为导航起点，避免从零重推；已过期的快照仅作线索，结论以代码为准。
+
 使用结构化方法：
 
 1. **自顶向下**：从入口点（handler、service 方法、RPC handler）出发，向下追踪

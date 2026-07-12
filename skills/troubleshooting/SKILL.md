@@ -114,6 +114,8 @@ cp skills/troubleshooting/reference/troubleshooting-log-template.md \
 
 ### 3. 历史案例（深度排查时）
 
+先查项目 `docs/issues/` 有无同类已查证故障；AGENTS.md 已接线共用知识库时，再查其 `issues/`。
+
 流水线/现网问题时，在 `reference/cases/` 搜索匹配案例：
 - 提取错误关键字（错误码、异常类型、模块名）
 - 匹配 `symptoms.keywords`
@@ -134,7 +136,9 @@ cp skills/troubleshooting/reference/troubleshooting-log-template.md \
 
 ## 案例沉淀
 
-复杂/代表性问题排查后，按 [case_template.md](reference/cases/case_template.md) 沉淀到 `reference/cases/<module>/`。
+复杂/代表性问题排查后，按 [case_template.md](reference/cases/case_template.md) 沉淀到 `reference/cases/<module>/`（框架级通用案例）。
+
+项目作用域的已查证故障，另按 `project-knowledge` 约定写入项目 `docs/issues/`；剥离项目上下文仍成立的，写入共用知识库 `issues/`。
 
 ---
 

@@ -106,9 +106,10 @@ cp skills/workflow-requirements-clarification/reference/spec_template.md \
 **目标**：理解现有实现，不询问用户
 
 **AI 操作**：
-1. 调用 `codebase-researcher` subagent 深度调研相关代码（模块结构、接口、依赖关系、数据流）
-2. 识别相关模块、接口、数据结构
-3. 生成现状分析摘要
+1. 检索已有知识：查项目 `docs/`（相关 ADR、`design-docs/` 历史相似 feature、`issues/` 踩坑）；AGENTS.md 已接线共用知识库时，经其根 `index.md` 两跳查 `domains/` 与 `issues/`
+2. 调用 `codebase-researcher` subagent 深度调研相关代码（模块结构、接口、依赖关系、数据流）
+3. 识别相关模块、接口、数据结构
+4. 生成现状分析摘要（含命中的已有知识）
 
 **向用户汇报（必须）**：
 ```

@@ -193,7 +193,9 @@ def evaluate_spec_drift(diff_base: str, reason: str) -> CheckResult:
     code_files = [path for path in changed if _is_code_file(path)]
     spec_files = [path for path in tracked if _is_spec_file(path)]
     untracked_spec_files = [path for path in untracked if _is_spec_file(path)]
-    related_spec_files = _related_spec_files(code_files, spec_files)
+    related_spec_files = _related_spec_files(
+        code_files, spec_files + untracked_spec_files
+    )
     value = {
         "diff_base": diff_base,
         "code_files": code_files,

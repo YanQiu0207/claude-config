@@ -28,7 +28,7 @@ description: 提供 Python 编码规范（基于 Google Python Style Guide）。
 | **异常** | 禁止裸 `except:`，自定义异常继承自 `Exception` |
 | **命名** | 类 `PascalCase`，函数/变量 `snake_case`，常量 `UPPER_CASE` |
 | **可变默认值** | 禁止使用可变对象（list/dict/set）作为默认参数 |
-| **测试** | 测试文件以 `test_` 开头，使用 `pytest` |
+| **测试** | 测试文件以 `test_` 开头，默认 `pytest`；零依赖工具类项目可用标准库 `unittest`，项目规则优先 |
 
 ## 完整规范
 

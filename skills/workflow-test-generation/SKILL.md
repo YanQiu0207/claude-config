@@ -13,7 +13,7 @@ description: 测试生成。基于 spec.md 或被测代码，生成单元测试�
 
 | 信号 | 路径 | 执行步骤 |
 |------|------|---------|
-| 由 `workflow-code-generation` 的 owner/implementer 在 task 内**内嵌调用**（无人值守） | **内嵌路径** | Step 2 → 3 → 4；**跳过 Step 1.5**（遇到前端 UI 场景自动降级为单元/集成测试并记录原因）**、跳过 Step 3 用户确认、跳过 Step 5**（测试通过后交还 owner 自跑 review） |
+| 由 `workflow-code-generation` 的 owner/implementer 在 task 内**内嵌调用**（无人值守） | **内嵌路径** | Step 2 → 3 → 4；**跳过 Step 1.5**（遇到前端 UI 场景自动降级为单元/集成测试并记录原因）**、跳过 Step 3 用户确认、跳过 Step 5**（测试通过后交还编排方按 `review_profile` 分流 review） |
 | 用户明确提到完整需求管理链接 | **完整流程** | Step 1 → 2 → 3 → 4 → 5 |
 | 用户直接说"给 X 写个测试"/"补个单测"，指定了具体代码 | **快速补测试** | Step 2 → 3 → 4 |
 | 由 `workflow-system-design` 讨论测试计划章节时加载 | **测试策略设计** | Step 1 → 2 → 3，只输出计划，不生成代码 |
@@ -41,13 +41,16 @@ description: 测试生成。基于 spec.md 或被测代码，生成单元测试�
 如果代码涉及前端 UI 流程（`.tsx` 文件或 spec.md 有用户操作路径），检查 E2E 前置条件：
 
 ```
-检测到前端 UI 场景，E2E 测试需要 Playwright。
+检测到前端 UI 场景。
+浏览器验证优先使用 playwright-mcp-parallel MCP，以支持多个隔离浏览器实例并行执行。
+若要生成可提交到项目的 E2E 测试代码，项目仍需要 Playwright 测试运行器。
 请确认：
-- 已安装：npx playwright --version
-- 已下载浏览器：npx playwright install chromium
+- MCP 可用：playwright-mcp-parallel
+- 项目 E2E 测试运行器可用：npx playwright --version
+- 项目 E2E 浏览器已下载：npx playwright install chromium
 ```
 
-未安装时告知用户命令，等待确认后继续；若用户跳过则只生成单元 / 集成测试，记录「E2E 未生成，原因：未安装 Playwright」。
+未安装 / 未配置时告知用户命令，等待确认后继续；若用户跳过则只生成单元 / 集成测试，记录「E2E 未生成，原因：未配置 playwright-mcp-parallel 或项目 Playwright 测试运行器」。
 
 ---
 

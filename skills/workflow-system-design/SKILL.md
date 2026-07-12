@@ -47,7 +47,7 @@ AI 通过提问帮助用户发现问题和权衡：
 
 ## 前置条件
 
-- `spec.md` 已存在且**第 1-3 节**（背景、目标、需求）完整
+- `spec.md` 已存在且**第 1-3 节**（背景、目标、需求）完整——完整性用 `python <workflow-code-generation 目录>/scripts/lint_spec.py <spec.md> --phase design` 机器判定，非 0 视为不完整
 - 如果不存在或不完整 → **停止，切换到 `workflow-requirements-clarification` Skill**
 
 ## 触发条件
@@ -153,8 +153,9 @@ AI：（加载规范，生成建议）
 
 **AI 操作**：
 1. 读取 spec.md 的 1-3 章节
-2. 调用 `codebase-researcher` subagent 深度调研相关代码（模块结构、接口、依赖链、技术约束）
-3. 生成摘要向用户确认
+2. 检索已有知识：相关 ADR（已定决策约束设计空间，方案不得与之冲突）、`docs/issues/` 踩坑；AGENTS.md 已接线共用知识库时查其 `domains/`
+3. 调用 `codebase-researcher` subagent 深度调研相关代码（模块结构、接口、依赖链、技术约束）
+4. 生成摘要向用户确认
 
 **向用户汇报（必须）**：
 ```

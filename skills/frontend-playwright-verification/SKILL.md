@@ -14,8 +14,9 @@ description: 前端效果最终验证门。前端/UI 改动后使用浏览器或
 优先顺序：
 
 1. 可用内置 Browser / IAB 时先用它。
-2. 不可用时用 Playwright。
-3. 若都不可用，说明阻塞和未验证风险。
+2. 不可用时优先用 `playwright-mcp-parallel` MCP，以便创建多个隔离浏览器实例并行验证。
+3. 项目已有 Playwright E2E 时，复用项目脚本。
+4. 若都不可用，说明阻塞和未验证风险。
 
 ## 先定义被测流程
 
@@ -53,15 +54,18 @@ description: 前端效果最终验证门。前端/UI 改动后使用浏览器或
 
 不要只用 DOM 声称视觉正确。不要只用截图声称流程可用。
 
-## Playwright fallback
+## Playwright MCP fallback
 
 无内置 Browser 时：
 
-1. 查 `package.json`。
-2. 用项目包管理器启动应用。
-3. 若项目已有 e2e，优先跑项目 e2e。
-4. 没有 e2e 时，用临时 Playwright 脚本打开 URL、收集 console、截图、跑目标交互。
-5. 临时脚本、截图、trace 默认放临时目录；不要写进 repo，除非用户要求。
+1. 查 MCP 工具列表，优先使用 `playwright-mcp-parallel` 暴露的 `instance_*` 和 `page_*` 工具。
+2. 查 `package.json`，用项目包管理器启动应用。
+3. 创建独立实例：`instance_create`。
+4. 用 `page_browser_navigate`、`page_browser_snapshot`、`page_browser_click`、`page_browser_screenshot` 等工具完成验证。
+5. 需要并行验证多条流程或多视口时，为每条流程创建独立 `instanceId`。
+6. 项目已有 e2e 时，优先跑项目 e2e。
+7. 没有 MCP 且没有 e2e 时，才用临时 Playwright 脚本打开 URL、收集 console、截图、跑目标交互。
+8. 临时脚本、截图、trace 默认放临时目录；不要写进 repo，除非用户要求。
 
 不要未经允许安装新浏览器依赖。
 

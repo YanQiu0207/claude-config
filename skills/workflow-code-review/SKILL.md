@@ -9,12 +9,14 @@ description: 代码评审。按风险档位协调 reviewer subagent 进行并行
 
 你是 **Judge**——编排流程、去重分诊、最终裁决、输出报告。你不是 reviewer，不产出 finding。
 
+当 `review_profile: strict` 时，Judge 必须与本次改动的 owner / implementer 不是同一执行主体。owner / implementer 不得调用本 skill 完成最终裁决，只能提交产物、接收 keep finding 并修复；若当前调用者参与过实现，必须将 review 上提给主 agent 或另一个独立 Judge Agent。
+
 ## Review 档位
 
 | 档位 | 适用 | 调用 reviewer |
 | --- | --- | --- |
-| `lightweight` | 小需求 / 低风险：单模块局部改动、不改公开接口、不碰数据 / 权限 / 并发 / 安全 / 性能关键路径 | `comprehensive-reviewer`（一趟覆盖工程规范 + 需求符合度两维） |
-| `standard` | 默认档：普通功能、Bug 修复、跨 2-3 个模块但风险可控 | `standards-reviewer`、`spec-compliance-reviewer`、`robustness-reviewer` |
+| `lightweight` | 小需求 / 低风险：局部改动，或不改变接口、契约、控制流与模块交互的跨文件机械重复改动；不碰数据 / 权限 / 并发 / 安全 / 性能关键路径 | `comprehensive-reviewer`（一趟覆盖工程规范、需求符合度、正确性与健壮性） |
+| `standard` | 默认档：普通功能、Bug 修复，或涉及多个模块之间的行为、契约、交互变化但风险可控 | `standards-reviewer`、`spec-compliance-reviewer`、`robustness-reviewer` |
 | `strict` | 高风险：生产关键路径、安全 / 权限 / 数据迁移 / 并发 / 分布式 / 性能敏感 / 公共 API / 大范围重构 | 全量 5 reviewer；有 finding 时调用 `review-critic` |
 
 调用方可显式传入 `review_profile: lightweight|standard|strict`。未传入时按范围和风险自行判定；无法判断时用 `standard`，命中高风险任一条件时用 `strict`。
@@ -23,7 +25,7 @@ description: 代码评审。按风险档位协调 reviewer subagent 进行并行
 
 | 角色 | subagent_name | 调用方式 |
 |------|---------------|----------|
-| 轻量综合审查 | `comprehensive-reviewer` | 仅 `lightweight` 调用（一趟覆盖工程规范 + 需求符合度两维） |
+| 轻量综合审查 | `comprehensive-reviewer` | 仅 `lightweight` 调用（一趟覆盖工程规范、需求符合度、正确性与健壮性） |
 | 性能审查 | `performance-reviewer` | `strict` 调用；性能敏感任务在 `standard` 中也可加入 |
 | 健壮性审查 | `robustness-reviewer` | `standard` / `strict` 调用 |
 | 工程规范审查 | `standards-reviewer` | `standard` / `strict` 调用 |
@@ -31,11 +33,29 @@ description: 代码评审。按风险档位协调 reviewer subagent 进行并行
 | 需求/设计符合度审查 | `spec-compliance-reviewer` | `standard` / `strict` 调用 |
 | 对抗性验证 | `review-critic` | `strict` 有 finding 时调用；`standard` 出现 P0 / P1 finding 时调用 |
 
+## 复审模式（re-review）
+
+修复-复审循环的第二轮及以后**必须**用本模式，不得重跑全量首轮。调用方传入 `rereview: true`、上一轮报告（裁决明细 + 正式问题）和修复 diff。
+
+与首轮的差异：
+
+- **核验范围只有两件事**：上一轮 keep 的每条 finding 是否已修复；修复 diff 本身是否引入新问题。**禁止对修复 diff 之外的代码提出新 finding**——全量扫描是首轮的责任，不靠复审轮补漏。
+- **派发收窄**：只派上一轮 keep finding 所属维度的 reviewer（每维度一个）；`review-critic` 不参与复审，除非复审轮新增 P0 / P1 finding。
+- **无上一轮 keep finding 的修复**（机器验证 / 前端验证等非 review finding 触发的代码修复）：只执行第二件事——核验修复 diff 是否引入新问题；reviewer 按当前 `review_profile` 的组合派发，审查范围仍限修复 diff。
+- **输出增量报告**：沿用第 7 步固定模板，轮次写「复审第 N 轮」（N = 上一轮轮次 + 1，首审记第 0 轮；无上一轮报告的验证类修复复审从第 1 轮起）。裁决明细中每条原 finding 标「已修复 / 未修复 / 部分修复」+ 依据；正式问题区只列未修复 / 部分修复的原 finding 与修复引入的新 finding（沿用 `F-{seq}` 续号），新 finding 标题加「（新增）」，如 `#### P1-2（新增）: ...`；总体结论仍为 PASS / NEEDS_CHANGES。
+
+### 循环语义（调用方必须遵守）
+
+- 仅总体结论为 `NEEDS_CHANGES`（存在 keep 的 P0 / P1）触发「修复 → 复审」循环；**P2 与 follow-up note 不触发循环**，原样记入报告交用户决定。
+- 修复-复审最多 2 轮；第 2 轮复审仍 `NEEDS_CHANGES` → 调用方标「需人工」终止，禁止继续循环。
+
 ## 工作流
 
 ### 1. 解析 review 范围
 
 根据用户输入确定审查文件、diff 来源和 `review_profile`。若范围不清，先澄清再继续。
+
+> 调用方传入 `rereview: true` → 按上方「复审模式」执行（收窄核验范围与派发），不走全量首轮流程；Step 4-7 的去重、裁决与报告规则仍适用于复审产物。
 
 - 指定文件/spec/task → 直接使用
 - 给出 git diff/commit → 解析变更文件
@@ -193,7 +213,7 @@ description: 代码评审。按风险档位协调 reviewer subagent 进行并行
 
 ### 7. 输出最终报告
 
-按以下模板输出（整个系统唯一固定格式）：
+按以下模板输出（整个系统唯一固定格式）。该模板同时是遥测质量账的解析接口（见 [11-session-telemetry.md](../../docs/11-session-telemetry.md)），「轮次」字段与复审报告的「（新增）」标记是指标数据源，不得省略：
 
 ```markdown
 # Code Review 报告
@@ -202,6 +222,7 @@ description: 代码评审。按风险档位协调 reviewer subagent 进行并行
 - **Spec**: [路径 或 N/A]
 - **Tasks**: [路径 或 N/A]
 - **当前 Task**: [ID/名称 或 N/A]
+- **轮次**: 首审 / 复审第 N 轮
 - **审查文件**: [文件列表]
 
 ## 总体结论: PASS / NEEDS_CHANGES

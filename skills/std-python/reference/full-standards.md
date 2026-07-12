@@ -507,7 +507,9 @@ while chunk := f.read(8192):
 
 ## 9. 测试规范
 
-### 9.1 【必须】使用 pytest
+### 9.1 【推荐】默认使用 pytest
+
+应用 / 服务类项目默认 pytest。例外：零依赖工具类项目（脚本须在裸 Python 环境直接运行、不引入第三方包）可用标准库 `unittest`；pytest 可直接收集 unittest 用例，后续需要其工具链时无须改写。项目规则（AGENTS.md / CLAUDE.md）对框架另有约定时以项目规则为准。
 
 ```toml
 # pyproject.toml
