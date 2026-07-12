@@ -134,6 +134,18 @@ tasks.md 经用户批准后，执行下放给 agent：**主会话只编排，不
 
 最终报告必须包含：
 
+```markdown
+## 任务归因
+- **Feature**: [feature 标识]
+- **Task**: [Task ID/名称]
+- **Review Profile**: lightweight / standard / strict
+- **Review Retries**: [非负整数]
+- **Verify Retries**: [非负整数]
+- **Manual Intervention**: 无 / [介入阶段，多个位置用中文逗号分隔]
+```
+
+每个 task 输出一个完整区块；同一 task 再次交付时重新输出完整区块。字段名和标题是遥测解析接口，不得改写或省略，不得从对话推测未知值。
+
 - **改动文件**：列出代码、规格、任务、ADR 和关键文档。
 - **提交状态**：本地 commit hash（代码与归档产物），或「未提交待用户处理」及原因。
 - **交付门**：`check_delivery.py` 输出（各项 PASS，或未过项及处理说明）。

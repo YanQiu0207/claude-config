@@ -221,7 +221,9 @@ description: 代码评审。按风险档位协调 reviewer subagent 进行并行
 ## 审查范围
 - **Spec**: [路径 或 N/A]
 - **Tasks**: [路径 或 N/A]
-- **当前 Task**: [ID/名称 或 N/A]
+- **Feature**: [feature 标识 或 N/A]
+- **Task**: [ID/名称 或 N/A]
+- **Review Profile**: lightweight / standard / strict
 - **轮次**: 首审 / 复审第 N 轮
 - **审查文件**: [文件列表]
 
