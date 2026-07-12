@@ -140,6 +140,11 @@ cp skills/troubleshooting/reference/troubleshooting-log-template.md \
 
 项目作用域的已查证故障，另按 `project-knowledge` 约定写入项目 `docs/issues/`；剥离项目上下文仍成立的，写入共用知识库 `issues/`。
 
+排查记录收尾：
+
+- 根因已确认：将现象、根因、证据和修复结论整理到对应 `issues/` 条目；确认信息完整后删除临时排查记录。
+- 根因未确认：保留临时排查记录，明确标记「未定位」，不得写入 `issues/`。
+
 ---
 
 ## 强制规则

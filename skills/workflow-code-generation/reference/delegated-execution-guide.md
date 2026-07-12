@@ -71,7 +71,7 @@ phase('汇总')
 return { results: allResults }
 ```
 
-Workflow 完成后，主会话拿到 `results` 数组。所有 task 先通过 `event quality_passed` 进入待合并决策；只有 Git 合并成功后才能通过 `event merge_success` 标为「完成」。`independent_review_required=true` 时，先由主 agent 或独立 Judge Agent 完成 `strict` review，把 keep finding 交给 owner 修复并按复审模式重审。
+Workflow 完成后，主会话拿到 `results` 数组。`independent_review_required=true`（`strict` 档）的 task，须先由主 agent 或独立 Judge Agent 完成 `strict` review 并裁决 `PASS`，把 keep finding 交给 owner 修复并按复审模式重审，**独立 review 通过后才可**调用 `event quality_passed` 持久化该阶段；`lightweight` / `standard` 档在 owner 内部 review + 机器验证均通过后即可调用。任一档位调用 `event quality_passed` 进入待合并决策后，只有 Git 合并成功才能通过 `event merge_success` 标为「完成」。
 
 > **与 Phase 1 的关系**：本方案替代 Phase 1 中「主会话用 `Agent` 工具 dispatch」的部分；失败隔离与合并规则保持一致。`strict` 的 review、裁决和最终状态写回由主会话负责，owner 不参与。
 
@@ -99,6 +99,8 @@ Workflow 完成后，主会话拿到 `results` 数组。所有 task 先通过 `e
 
 > 🗂 **`tasks.md` 是进度真相源**：每个 task 的 `状态:` 字段实时写回（`未开始` / `进行中` / `完成` / `需人工` / `阻塞`）——dispatch 标 `进行中`，合并成功标 `完成`，失败 / 冲突标 `需人工`（附原因 + 失败输出），上游未合并的下游标 `阻塞`。每步完成即更新，中断后靠它续跑。
 
+所有状态写入必须通过 `workflow_control.py ... --write` 完成。脚本使用同目录的 `.<tasks.md 文件名>.lock` 排他锁，并在锁内重新读取、决策和原子写回；多个会话可以等待同一写锁，但不能并行合并状态。默认等待 10 秒，可在 `event` 或 `block` 后传 `--lock-timeout <秒数>` 调整；超时退出时不会修改 `tasks.md`。`waves`、`dispatchable` 和 `recover` 为只读命令，不获取排他锁。锁文件长期存在不代表锁仍被占用，不要手工删除正在使用的锁文件。
+
 对每个 wave：
 
 1. **dispatch**：波内每个 task 派一个子 agent（A 为 owner、B 为 implementer），各自在隔离 git worktree（基于当前分支 HEAD）工作，受并发上限约束、超出排队。多个子 agent **在同一条消息里并行派发**。
@@ -108,10 +110,16 @@ Workflow 完成后，主会话拿到 `results` 数组。所有 task 先通过 `e
 2. **质量门**（review + 机器验证，两者都过才算通过）：
    - 模式 A：`lightweight` / `standard` 由 owner 跑 review 与 `workflow-verification`，主 agent 只收集结论；`strict` 由 owner 跑 `workflow-verification`，主 agent 或独立 Judge Agent 跑 review 并裁决。
    - 模式 B：主 agent 对每个产物（在其 worktree 内）扮演 `workflow-code-review` 的 Judge 按 `review_profile` 裁决，再跑 `workflow-verification` 机器验证。
-3. **失败隔离**：测试 / review（结论 `NEEDS_CHANGES`）/ 机器验证任一不过 → 有限轮次（≤ 2）自修复重跑。review 重跑用复审模式；模式 A 的 `lightweight` / `standard` 在 owner 内修复，`strict` 由独立 Judge 把 keep finding 交给 owner 修复后复审；模式 B 由主 agent 派 fixer 在同一 worktree 修。仍不过、或子 agent 报范围 / 依赖问题无法在本 task 内解决 → 标 `需人工` 附原因 + 失败输出（review finding / 错误摘要）；**子 agent 崩溃 / 超时 / 无产物返回** → 标 `需人工` 注「agent 未返回，需重 dispatch」。标 `需人工` 的 task **其 worktree 保留**供排查、不清理。以上**均不阻塞同波其他 task、不停整个流程**。 任务结果必须交给控制流内核裁决并写回，不得凭 Prompt 自行判断重试耗尽：
+3. **失败隔离**：测试 / review（结论 `NEEDS_CHANGES`）/ 机器验证任一不过 → 有限轮次（≤ 2）自修复重跑。review 重跑用复审模式；模式 A 的 `lightweight` / `standard` 在 owner 内修复，`strict` 由独立 Judge 把 keep finding 交给 owner 修复后复审；模式 B 由主 agent 派 fixer 在同一 worktree 修。仍不过、或子 agent 报范围 / 依赖问题无法在本 task 内解决 → 标 `需人工` 附原因 + 失败输出（review finding / 错误摘要）；**子 agent 崩溃 / 超时 / 无产物返回** → 标 `需人工` 注「agent 未返回，需重 dispatch」。标 `需人工` 的 task **其 worktree 保留**供排查、不清理。以上**均不阻塞同波其他 task、不停整个流程**。任务结果必须交给控制流内核裁决并写回，不得凭 Prompt 自行判断重试耗尽：
 
    ```bash
    python <本 skill 目录>/scripts/workflow_control.py <tasks.md 路径> event <任务 ID> failure --max-attempts 2 --reason "<失败摘要>" --write
+   ```
+
+   **直接标需人工、不占用 `failure` 的 `attempts` 重试预算**的场景（`workflow-verification` 机器验证门禁自身出错、owner / implementer 子 agent 崩溃或超时无产物返回、复审 2 轮仍 `NEEDS_CHANGES`、owner 内部修复轮次已耗尽）改用 `manual` 事件，`--reason` 必填：
+
+   ```bash
+   python <本 skill 目录>/scripts/workflow_control.py <tasks.md 路径> event <任务 ID> manual --reason "<需人工原因>" --write
    ```
 
    dispatch 前调用 `event <任务 ID> start --write`，脚本会再次校验所有依赖均为「完成」；质量门通过后调用 `event <任务 ID> quality_passed --write`，此时状态仍为「进行中」，但 `control_stage` 持久化为 `quality_passed`；Git 合并成功后调用 `event <任务 ID> merge_success --write`，合并失败调用 `event <任务 ID> merge_failure --reason "<冲突摘要>" --write`。两个合并事件只接受已持久化的 `quality_passed` 阶段。失败次数由脚本持久化到 `attempts` 字段，禁止从命令行重置。每波收口后传播下游阻塞：
@@ -120,7 +128,7 @@ Workflow 完成后，主会话拿到 `results` 数组。所有 task 先通过 `e
    python <本 skill 目录>/scripts/workflow_control.py <tasks.md 路径> block --write
    ```
 4. **合并**：波内过质量门的 task，其 worktree / 分支**依次**合并回主分支（`git merge --no-ff <task-branch>`），成功即标 `完成`、清理 worktree（`git worktree remove`）；冲突 → 标 `需人工`（记冲突文件）、**worktree 保留待人工**，跳过、继续合并其余。
-   - **上游未合并 → 下游阻塞**：某 task 标 `需人工` 后，**依赖它的后波 task 一并标 `阻塞`**（记「上游 Task N 未合并」）、跳过 dispatch——否则后波会 dispatch 在缺该产物的 HEAD 上，破坏「先建后迁后删可编译」。上游经人工解决并合并后方可解阻。
+   - **上游未合并 → 下游阻塞**：某 task 标 `需人工` 后，**依赖它的后波 task 一并标 `阻塞`**（记「上游 Task N 未合并」）、跳过 dispatch——否则后波会 dispatch 在缺该产物的 HEAD 上，破坏「先建后迁后删可编译」。上游经人工解决并合并后，先对上游 task 调用 `event <上游任务 ID> manual_resolved --reason "<处理摘要>" --write` 标完成，再对下游 task 调用 `event <下游任务 ID> unblock --write` 解阻（脚本会校验依赖已全部完成），重新进入批准的执行路径。
 5. **不停等用户**，进入下一波，直到所有波处理完。
 
 > **现状类信息**（模块 / 接口 / 数据流怎么变）不沉淀——那是代码的职责。若本波某 task 引入值得沉淀的 intent，趁热预留「intent 沉淀」任务，回 SKILL 步骤 6 统一收口。
@@ -136,12 +144,12 @@ Workflow 完成后，主会话拿到 `results` 数组。所有 task 先通过 `e
    python <本 skill 目录>/scripts/workflow_control.py <tasks.md 路径> recover --merged <任务 ID...>
    ```
 
-   `skip` 不重跑；`complete` 补标完成；`inspect` 核对产物和质量门；`unblock` 解阻；`dispatch` 可进入新一波；`wait` 保持等待。
-3. **执行并写回**：按计划处理残留 worktree 和质量门，使用合法 `event` 写回；已合并的「进行中」任务调用 `event <任务 ID> merge_success --write`。解阻任务在上游全部完成后调用 `event <任务 ID> unblock --write`，再重新进入批准的执行路径；不允许绕过状态机直接改状态。`需人工` task 的 worktree 保留供排查。
+   `skip` 不重跑；`complete` 补标完成；`inspect` 核对产物和质量门；`manual` 表示该 `需人工` task 尚未合并，需人工排查并合并其分支后才能推进；`unblock` 解阻；`dispatch` 可进入新一波；`wait` 保持等待。
+3. **执行并写回**：按计划处理残留 worktree 和质量门，使用合法 `event` 写回；已合并的「进行中」任务调用 `event <任务 ID> merge_success --write`；`recover` 判定为 `complete` 的「需人工」任务（即已在 `--merged` 集合中）调用 `event <任务 ID> manual_resolved --reason "<处理摘要>" --write` 补标完成；判定为 `manual` 的「需人工」任务先人工排查、合并其分支后重跑本步骤，才会转为 `complete`。解阻任务在上游全部完成后调用 `event <任务 ID> unblock --write`，再重新进入批准的执行路径；不允许绕过状态机直接改状态。`需人工` task 的 worktree 保留供排查。
 
 4. **重新计算**：再次运行 `waves` 和 `dispatchable`，逐波续跑，直至全部 task 为 `完成` / `需人工` / `阻塞`。
 
-完成后**必须回到 SKILL 步骤 6**做交付前沉淀检查、给逐条判定结论再宣布交付——**恢复路径不豁免步骤 6**。
+完成后**必须回到 SKILL 步骤 6** 做交付前沉淀检查、给逐条判定结论再宣布交付——**恢复路径不豁免步骤 6**。
 
 ## 其他 CLI 工具（如 Codex）的上下文控制
 

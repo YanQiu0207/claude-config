@@ -16,7 +16,7 @@ description: 代码评审。按风险档位协调 reviewer subagent 进行并行
 | 档位 | 适用 | 调用 reviewer |
 | --- | --- | --- |
 | `lightweight` | 小需求 / 低风险：局部改动，或不改变接口、契约、控制流与模块交互的跨文件机械重复改动；不碰数据 / 权限 / 并发 / 安全 / 性能关键路径 | `comprehensive-reviewer`（一趟覆盖工程规范、需求符合度、正确性与健壮性） |
-| `standard` | 默认档：普通功能、Bug 修复，或涉及多个模块之间的行为、契约、交互变化但风险可控 | `standards-reviewer`、`spec-compliance-reviewer`、`robustness-reviewer` |
+| `standard` | 默认档：普通功能、Bug 修复，或涉及多个模块之间的行为、契约、交互变化但风险可控 | `comprehensive-reviewer`（一趟覆盖工程规范、需求符合度、正确性与健壮性） |
 | `strict` | 高风险：生产关键路径、安全 / 权限 / 数据迁移 / 并发 / 分布式 / 性能敏感 / 公共 API / 大范围重构 | 全量 5 reviewer；有 finding 时调用 `review-critic` |
 
 调用方可显式传入 `review_profile: lightweight|standard|strict`。未传入时按范围和风险自行判定；无法判断时用 `standard`，命中高风险任一条件时用 `strict`。
@@ -25,13 +25,13 @@ description: 代码评审。按风险档位协调 reviewer subagent 进行并行
 
 | 角色 | subagent_name | 调用方式 |
 |------|---------------|----------|
-| 轻量综合审查 | `comprehensive-reviewer` | 仅 `lightweight` 调用（一趟覆盖工程规范、需求符合度、正确性与健壮性） |
-| 性能审查 | `performance-reviewer` | `strict` 调用；性能敏感任务在 `standard` 中也可加入 |
-| 健壮性审查 | `robustness-reviewer` | `standard` / `strict` 调用 |
-| 工程规范审查 | `standards-reviewer` | `standard` / `strict` 调用 |
+| 综合审查 | `comprehensive-reviewer` | `lightweight` / `standard` 调用；根据档位控制审查深度 |
+| 性能审查 | `performance-reviewer` | `strict` 调用 |
+| 健壮性审查 | `robustness-reviewer` | `strict` 调用 |
+| 工程规范审查 | `standards-reviewer` | `strict` 调用 |
 | 契约与信任链审查 | `magical-prompt-reviewer` | `strict` 调用；涉及 prompt / 外部工具 / 权限边界时必须加入 |
-| 需求/设计符合度审查 | `spec-compliance-reviewer` | `standard` / `strict` 调用 |
-| 对抗性验证 | `review-critic` | `strict` 有 finding 时调用；`standard` 出现 P0 / P1 finding 时调用 |
+| 需求/设计符合度审查 | `spec-compliance-reviewer` | `strict` 调用 |
+| 对抗性验证 | `review-critic` | `strict` 有 finding 时调用 |
 
 ## 复审模式（re-review）
 
@@ -65,7 +65,7 @@ description: 代码评审。按风险档位协调 reviewer subagent 进行并行
 
 - 在 `docs/design-docs/` 下搜索相关 `spec.md` 和 `tasks.md`
 - 确定审查文件、上下文文件（caller/callee/接口定义）
-- 根据文件类型和目录确定适用 skill；若目录结构或 spec.md 显示 DDD 分层（adapter / domain / application / infrastructure），将 `bp-cola-ddd` 加入 `{skill_list}` 传入 `standards-reviewer` 和 `spec-compliance-reviewer`；若改动涉及架构边界 / 模块划分或组件接口 / 数据模型设计，相应将 `bp-architecture-design` / `bp-component-design` 加入 `{skill_list}`
+- 根据文件类型和目录确定适用 skill；若目录结构或 spec.md 显示 DDD 分层（adapter / domain / application / infrastructure），将 `bp-cola-ddd` 加入 `{skill_list}`：`lightweight` / `standard` 传给 `comprehensive-reviewer`，`strict` 传给 `standards-reviewer` 和 `spec-compliance-reviewer`；若改动涉及架构边界 / 模块划分或组件接口 / 数据模型设计，相应将 `bp-architecture-design` / `bp-component-design` 加入 `{skill_list}`
 - 提炼与本次 review 相关的 spec/task 摘要
 
 ### 3. 并行分派 reviewer
@@ -111,9 +111,9 @@ description: 代码评审。按风险档位协调 reviewer subagent 进行并行
 
 ## 📋 Reviewer 意见汇总
 
-> 只列本档位实际调用的 reviewer 分节。`lightweight` 档仅 `comprehensive-reviewer` 一节。
+> 只列本档位实际调用的 reviewer 分节。`lightweight` / `standard` 档仅 `comprehensive-reviewer` 一节，显式追加 reviewer 时再增加对应分节。
 
-### 轻量综合审查 (comprehensive-reviewer，仅 lightweight 档)
+### 综合审查 (comprehensive-reviewer，lightweight / standard 档)
 
 - **F-1** [P1 · 需求符合度]
   - **位置**: `file:line`
@@ -158,7 +158,7 @@ description: 代码评审。按风险档位协调 reviewer subagent 进行并行
 
 ### 5. 按档位调用 critic & 输出 Critic 意见
 
-仅在以下情况调用 `review-critic` subagent：`strict` 档有 finding，或 `standard` 档出现 P0 / P1 finding。`lightweight` 档默认不调用 critic，除非 Judge 判断 finding 影响面超出小需求边界，应升级为 `standard` 或 `strict` 后重审。需要调用 critic 时，**必须等待 critic subagent 返回后才能进入 Step 6**——禁止主 agent 自己做对抗性验证：
+仅在 `strict` 档有 finding 时调用 `review-critic` subagent。`lightweight` / `standard` 不调用 critic；若 Judge 判断 finding 影响面已命中严格档条件，升级为 `strict` 后重审。需要调用 critic 时，**必须等待 critic subagent 返回后才能进入 Step 6**——禁止主 agent 自己做对抗性验证：
 
 ```
 [Issue 列表]

@@ -24,10 +24,12 @@ description: 代码文件修改的统一入口。任何代码变更（新功能�
 
 ## 步骤 1：评估复杂度与路由
 
-> ⚠️ **防御性检查**：无法明确回答「改什么文件」「实现什么行为」「怎样算完成」中任一个 → **立即停止**，调用 `workflow-requirements-clarification`。本 skill 不负责需求澄清。
+> ⚠️ **防御性检查**：无法明确回答「实现什么行为」「怎样算完成」中任一个 → **立即停止**，调用 `workflow-requirements-clarification`。需求和验收标准清楚、但尚不能确定文件或实现方案，不等于需求不清；按下方规则进入 `workflow-quick-design`。
 
 - **轻量改动** → **Fast-Path**。核心判据是**请求即计划**：用户请求本身已完整确定改什么、怎么改，AI 无需替用户做任何未言明的设计决策。在此前提下须全部满足：路由阶段就能确定完整文件列表；每处修改是局部的（不改函数签名 / 模块边界 / 公开接口）；不碰数据 / 权限 / 并发 / 安全 / 性能关键路径。文件数只作护栏不作主判据：超过 3 个文件默认不走 Fast-Path，除非是同一模式的机械重复（如统一改名、同一防护补丁多点应用）。机械重复是指每处应用相同变换，不改变接口、契约、控制流或模块交互。Fast-Path 固定使用 `lightweight` 档，由单个综合 reviewer 覆盖工程规范、需求符合度、正确性与健壮性。
-- **其余一切**（超出上述任一判据 / 需 spec / 可拆多 task）→ **标准流程**（下放 agent 执行）。
+- **需求与验收标准清楚，但需要补实现方案或文件定位** → 直接调用 `workflow-quick-design`，不先走需求澄清。若 Quick Design 识别出安全、权限、数据迁移、并发、分布式、性能关键路径、公共 API 或大范围重构，再升级为完整需求与系统设计流程。
+- **需求或验收标准不清楚** → 调用 `workflow-requirements-clarification`。
+- **其余一切**（已有 spec / tasks，或 Quick Design 完成）→ **标准流程**（下放 agent 执行）。
 - **无法确定 → 标准流程。** Fast-Path 执行中发现外溢（文件列表超出路由判断，或触碰高风险面）→ 立即退出，转标准流程。
 
 ---
@@ -106,7 +108,7 @@ tasks.md 经用户批准后，执行下放给 agent：**主会话只编排，不
 
 无法判断风险时选 `standard`；命中高风险任一条件时选 `strict`。各档位对应的 reviewer 集由 `workflow-code-review` 定义（本 skill 只判档，不重列）。review 档位写入 task context，owner / implementer 必须按档位调用 `workflow-code-review`。
 
-**主会话必须通过控制流内核构建波次（wave）数组**：先运行 `python <本 skill 目录>/scripts/workflow_control.py <tasks.md 路径> waves`，将输出的波次数组作为 `args.waves` 传入 Workflow 工具。每波 dispatch 前运行同一脚本的 `dispatchable`，只执行输出的 task。缺 `depends_on` 时先由 `lint_task_deps.py` 报错，修复前禁止全并行。**禁止另写一套手工分波或状态判断。**
+**主会话必须通过控制流内核构建波次（wave）数组**：先运行 `python <本 skill 目录>/scripts/workflow_control.py <tasks.md 路径> waves` 得到任务 ID 分层数组，按 [reference/delegated-execution-guide.md](reference/delegated-execution-guide.md) 将当前一波的每个任务 ID 富化为 task 对象（从 `tasks.md` 取 `title`、`context_files`、`verification`、`artifacts`、`review_profile`）后再传入 Workflow 工具的 `args.waves`。每波 dispatch 前运行同一脚本的 `dispatchable`，只执行输出的 task。缺 `depends_on` 时先由 `lint_task_deps.py` 报错，修复前禁止全并行。**禁止另写一套手工分波或状态判断**。
 
 **先判定 CLI 嵌套能力**（派子 agent 试再派孙 agent；判定细则与 5 层上限见 reference 手册），选编排模式：
 - **模式 A（默认，Claude Code 支持嵌套）**：每 task 派 owner 子 agent 执行实现、测试和机器验证。`lightweight` / `standard` 由 owner 自跑 review；`strict` 由主 agent 或独立 Judge Agent 调用 `workflow-code-review` 并裁决，owner 只接收 keep finding 并修复。
@@ -119,7 +121,7 @@ tasks.md 经用户批准后，执行下放给 agent：**主会话只编排，不
 全部 wave 处理完、`tasks.md` 任务为 `完成` / `需人工` / `阻塞` 时，**禁止直接宣布交付**，先走：
 
 1. **汇总报告**（一次性，不逐 task）：每个 task 的实现 / review 结果，列出哪些 `需人工`（附原因）、哪些 `阻塞`（附上游归因，如「上游 Task N 未合并」）、哪些合并冲突。
-2. **最终审核**：对本次所有已合并入主分支的变更文件整体调用 `workflow-code-review`（`review_profile` 取各 task 中最高档位），聚焦跨 task 的集成问题（per-task review 已覆盖单 task 内部质量）；结论为 `NEEDS_CHANGES`（存在 keep 的 P0 / P1）→ **派 fix agent 修复后按复审模式重审**（主会话只编排，不亲自写代码），最多 2 轮；仍 `NEEDS_CHANGES` → 整体标 `需人工`，附 review finding 摘要，终止循环。**P2 / follow-up 不触发修复循环**，记入汇总报告。
+2. **最终审核**：仅当本次包含 2 个及以上已合并 task 时，对所有变更文件整体调用 `workflow-code-review`（`review_profile` 取各 task 中最高档位），聚焦跨 task 的集成问题。只有 1 个 task 时，task 级 Review 已覆盖全部改动，跳过重复的整体 Review；若合并后又产生 task Review 未覆盖的代码改动，则仍须执行最终 Review。最终 Review 为 `NEEDS_CHANGES`（存在 keep 的 P0 / P1）→ **派 fix agent 修复后按复审模式重审**（主会话只编排，不亲自写代码），最多 2 轮；仍 `NEEDS_CHANGES` → 整体标 `需人工`，附 Review Finding 摘要，终止循环。**P2 / follow-up 不触发修复循环**，记入汇总报告。
 3. **机器验证**：对合并结果整体跑 `workflow-verification`。有 config 时必须传 `--baseline <repo-root>/.verify/baseline.json --diff-base <base_sha>`；无 config 时必须传 `--diff-base <base_sha>` 触发内置 spec drift 检查。FAIL → 派 fix agent 修复后回第 2 步重审（复审模式，范围为修复 diff）再验，若只是无法证明相关规格已更新且确实无需更新，则补 `--spec-drift-reason` 后重跑；仍 FAIL 标 `需人工`；未验到列为风险。
 4. **前端验证**：若涉及 UI / 样式 / `.tsx` / 用户操作路径，加载 `bp-frontend-taste` 后再用 `frontend-playwright-verification` 做浏览器验证。失败则修复后重跑；若修复产生代码改动，必须回到第 2 步重新最终审核（复审模式，范围为本次新增改动），再重新验证。无法验证则列为风险。
 5. **交付前沉淀检查**：见下方[「交付前沉淀检查」](#交付前沉淀检查)，并逐条核销步骤 3 / Phase 1 预留的「intent 沉淀」任务。

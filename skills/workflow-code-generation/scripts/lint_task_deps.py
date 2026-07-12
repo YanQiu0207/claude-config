@@ -143,7 +143,9 @@ def main(argv: list[str]) -> int:
         return 2
 
     try:
-        tasks = parse_tasks(args.tasks_md.read_text(encoding="utf-8", errors="replace"))
+        tasks = parse_tasks(
+            args.tasks_md.read_text(encoding="utf-8-sig", errors="replace")
+        )
     except ValueError as error:
         print(f"error: {error}", file=sys.stderr)
         return 2

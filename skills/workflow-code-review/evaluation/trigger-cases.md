@@ -35,3 +35,11 @@
 - 边界样本：以「询问澄清」为正确，不计入误触发。
 
 > 效果评估（这次审查有没有抓到该抓的问题）属 Tier 2，成本高、需 Rubric + 基线，按需再建 `quality-cases.md` / `rubric.md` / `baseline/`，本样板不预置空壳。
+
+## profile-routing（档位路由）
+
+| ID | 场景 | 预期 reviewer | 理由 |
+| --- | --- | --- | --- |
+| P-1 | 局部低风险修复 | `comprehensive-reviewer` | `lightweight` 单 Reviewer |
+| P-2 | 风险可控的普通功能或跨模块修改 | `comprehensive-reviewer` | `standard` 单 Reviewer |
+| P-3 | 安全、权限、数据迁移、并发或公共 API | 全量 5 Reviewer | `strict` 保留多维审查与 Critic |
