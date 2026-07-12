@@ -127,3 +127,5 @@ LLM 经常默默选择一种解释然后执行。这个原则强制明确推理�
 ## 跨项目共用知识库
 
 - 路径：`E:/work/shared-knowledge-base`
+
+@RTK.md
