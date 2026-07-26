@@ -6,6 +6,7 @@
 
 | Skill | 说明 |
 |-------|------|
+| **ai-project-quality-audit** | 审计由 AI 实现或大量 AI 参与实现的软件项目是否达到生产质量。 |
 | **anysearch** | Real-time search engine supporting web search, vertical domain search, parallel batch search, and URL content extraction. |
 | **batch-md-fmt** | 批量对多个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
 | **batch-md-lint** | 批量检查多个 Markdown 文件的排版规范。 |
@@ -60,7 +61,7 @@ Skills 运行时引用的规范和知识库文件，安装对应 skill 时需一
 
 | 文件 | 说明 | 被引用方 |
 |------|------|----------|
-| **markdown-zh.md** | 中文文案排版指南，定义中英混排、标点、空格等规范。 | `md-zh` |
+| **markdown-zh.md** | 中文文案排版指南，定义中英混排、标点、空格等规范。 | 无直接引用（`md-zh` skill 自包含相同规范，不读取本文件） |
 | **claude-code-guide.md** | Claude Code 使用技巧汇总，供 CLAUDE.md 中的知识库查询指令引用。 | CLAUDE.md |
 
 ## 全局指令（CLAUDE.md）
@@ -161,6 +162,8 @@ google-cpp-naming ── （知识库，无依赖）
 
 english-learn ────── md-zh (skill)
 
+ai-project-quality-audit ── （独立，无依赖）
+
 anysearch ─────────── （独立，无依赖）
 
 bp-cola-ddd ───────── （独立，无依赖）
@@ -211,7 +214,7 @@ standards-reviewer
 - `english-learn` 依赖 `md-zh` skill（中文排版规范知识库）。
 - `md-zh`、`cc-adv-guide`、`google-cpp-naming` 为知识库型 skill，无依赖，由其他 skill 或 CLAUDE.md 引用调用。
 - `fuwari-post-worker` 和 `kms-article-summarizer` 为独立 agent，对应的调度 skill（`batch-fuwari-post`、`kms-deep-search`）不在本仓库中。
-- 其余 skill（`anysearch`、`bp-cola-ddd`、`code-reading-assistant`、`download-source`、`handoff`、`learn-repo`、`md-img-local`、`open-code-review`、`pdf2md`、`project-launch-audit`、`qiaomu-anything-to-notebooklm`、`skill-del`、`skill-evolver`、`skill-rename`）可独立使用。
+- 其余 skill（`ai-project-quality-audit`、`anysearch`、`bp-cola-ddd`、`code-reading-assistant`、`download-source`、`handoff`、`learn-repo`、`md-img-local`、`open-code-review`、`pdf2md`、`project-launch-audit`、`qiaomu-anything-to-notebooklm`、`skill-del`、`skill-evolver`、`skill-rename`）可独立使用。
 
 ## 开发设置
 
