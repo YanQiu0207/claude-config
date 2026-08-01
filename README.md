@@ -66,7 +66,7 @@ Skills 运行时引用的规范和知识库文件，安装对应 skill 时需一
 
 ## 全局指令（CLAUDE.md）
 
-Claude Code 的全局行为配置，涵盖：称呼约定（统一称用户为「老板」）、沟通方式（优先中文，直角引号，英文模式下先提供标准英文标注）、事实性内容必须有来源支撑（写入文档须附来源链接，来源不明不得落盘）、通用代码风格（4 空格缩进、工具脚本用 Python 3）、Claude Code 参考知识库路径（`~/.claude/claude_ref/claude-code-guide.md`）、中文 Markdown 排版规范（通过 `md-zh` 技能，写入前必须自检、写入后须复核）、记忆与知识写入规则（全局 vs. 项目的持久化位置）、创建或修改技能时先调用 `cc-adv-guide`、编程规则（编码前不假设不隐藏困惑、简洁优先、精准修改只碰必须碰的、目标驱动执行循环验证、架构知识沉淀）、联网搜索优先用 `anysearch` skill、RTK 命令代理（`@RTK.md`）。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
+Claude Code 的全局行为配置，涵盖：沟通方式（统一称用户为「老板」、默认中文并用直角引号、简洁直接先结论后证据、事实性内容须有可靠来源且不确定时明确说明）、通用代码风格（4 空格缩进、工具脚本用 Python 3）、中文 Markdown 排版规范（新增或改写前须按 `md-zh` 规则自检：中英文空格、中文与数字空格、全角标点、专有名词大小写）、编程规则（编码前不假设不隐藏困惑、简洁优先、精准修改只碰必须碰的、目标驱动执行循环验证、架构知识沉淀）、Claude Code 专属（Claude Code 知识点默认写入 `~/.claude/claude_ref/claude-code-guide.md`、行为规则区分全局与项目的持久化位置、创建或修改技能时先调用 `cc-adv-guide`）、跨项目共用知识库（`E:/work/shared-knowledge-base`）、联网搜索优先用 `anysearch` skill、RTK 命令代理（`@RTK.md`）、AgentMemory 共享持久化记忆层（Hook 自动捕获、MCP 检索与写入；记忆非权威来源，与代码、配置、测试或知识库冲突时以可验证事实为准）。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
 
 ## 目录结构
 
@@ -188,7 +188,7 @@ qiaomu-anything-to-notebooklm ── （独立，无依赖）
 
 skill-del ───────────── （独立，无依赖）
 
-skill-evolver ────────── （独立，无依赖）
+skill-evolver ──── skill-creator（外部 plugin，非本仓库；含 grader、comparator、analyzer 三个 agent）
 
 skill-rename ────────── （独立，无依赖）
 ```
@@ -214,7 +214,8 @@ standards-reviewer
 - `english-learn` 依赖 `md-zh` skill（中文排版规范知识库）。
 - `md-zh`、`cc-adv-guide`、`google-cpp-naming` 为知识库型 skill，无依赖，由其他 skill 或 CLAUDE.md 引用调用。
 - `fuwari-post-worker` 和 `kms-article-summarizer` 为独立 agent，对应的调度 skill（`batch-fuwari-post`、`kms-deep-search`）不在本仓库中。
-- 其余 skill（`ai-project-quality-audit`、`anysearch`、`bp-cola-ddd`、`code-reading-assistant`、`download-source`、`handoff`、`learn-repo`、`md-img-local`、`open-code-review`、`pdf2md`、`project-launch-audit`、`qiaomu-anything-to-notebooklm`、`skill-del`、`skill-evolver`、`skill-rename`）可独立使用。
+- `skill-evolver` 依赖外部 plugin `skill-creator`（非本仓库 skill），运行时调用其 `grader`、`comparator`、`analyzer` 三个 agent。
+- 其余 skill（`ai-project-quality-audit`、`anysearch`、`bp-cola-ddd`、`code-reading-assistant`、`download-source`、`handoff`、`learn-repo`、`md-img-local`、`open-code-review`、`pdf2md`、`project-launch-audit`、`qiaomu-anything-to-notebooklm`、`skill-del`、`skill-rename`）可独立使用。
 
 ## 开发设置
 
