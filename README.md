@@ -66,7 +66,7 @@ Skills 运行时引用的规范和知识库文件，安装对应 skill 时需一
 
 ## 全局指令（CLAUDE.md）
 
-Claude Code 的全局行为配置，涵盖：沟通方式（统一称用户为「老板」、默认中文并用直角引号、简洁直接先结论后证据、事实性内容须有可靠来源且不确定时明确说明）、通用代码风格（4 空格缩进、工具脚本用 Python 3）、中文 Markdown 排版规范（新增或改写前须按 `md-zh` 规则自检：中英文空格、中文与数字空格、全角标点、专有名词大小写）、编程规则（编码前不假设不隐藏困惑、简洁优先、精准修改只碰必须碰的、目标驱动执行循环验证、架构知识沉淀）、Claude Code 专属（Claude Code 知识点默认写入 `~/.claude/claude_ref/claude-code-guide.md`、行为规则区分全局与项目的持久化位置、创建或修改技能时先调用 `cc-adv-guide`）、跨项目共用知识库（`E:/work/shared-knowledge-base`）、联网搜索优先用 `anysearch` skill、RTK 命令代理（`@RTK.md`）、AgentMemory 共享持久化记忆层（Hook 自动捕获、MCP 检索与写入；记忆非权威来源，与代码、配置、测试或知识库冲突时以可验证事实为准）。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
+Claude Code 的全局行为配置，涵盖：沟通方式（统一称用户为「老板」、默认中文并用直角引号、简洁直接先结论后证据、事实性内容须有可靠来源且不确定时明确说明）、通用代码风格（4 空格缩进、工具脚本用 Python 3）、中文 Markdown 排版规范（新增或改写前须按 `md-zh` 规则自检：中英文空格、中文与数字空格、全角标点、专有名词大小写）、编程规则（编码前不假设不隐藏困惑、简洁优先、精准修改只碰必须碰的、目标驱动执行循环验证、架构知识沉淀）、Claude Code 专属（Claude Code 知识点默认写入 `~/.claude/claude_ref/claude-code-guide.md`、行为规则区分全局与项目的持久化位置、创建或修改技能时先调用 `cc-adv-guide`）、跨项目共用知识库（`E:/work/shared-knowledge-base`）、联网搜索优先用 `anysearch` skill、RTK 命令代理（`@RTK.md`）。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
 
 ## 目录结构
 
@@ -79,7 +79,8 @@ claude-config/
 ├── .ai-rules/       # AI 辅助规则（交付工作流、工程规范等）
 ├── .githooks/       # Git 钩子配置（开发用）
 ├── .gitignore       # Git 忽略规则
-└── CLAUDE.md        # 全局指令
+├── CLAUDE.md        # 全局指令
+└── README.md        # 本文件（仓库说明）
 ```
 
 ## 安装方式
@@ -268,7 +269,7 @@ cp .githooks/sensitive-patterns.example .githooks/sensitive-patterns
 - 源文件比目标文件新时，覆盖目标文件。
 - 目标文件比源文件新时，不覆盖，记为冲突。
 - 源侧文件已删除时，同步删除目标侧对应的文件。
-- 有变更时自动执行 `git add`、`git commit`、`git push`。
+- 有变更时先调用 Claude Code CLI 自动更新 `README.md`，再执行 `git add`、`git commit`、`git push`。
 
 运行方式：
 
