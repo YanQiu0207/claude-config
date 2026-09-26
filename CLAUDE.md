@@ -132,7 +132,9 @@ LLM 经常默默选择一种解释然后执行。这个原则强制明确推理�
 
 - 需要联网搜索时，优先使用 anysearch skill；仅当 anysearch 不可用或不适用时，再退回内置搜索工具。
 
+<!-- HARNESS_RTK_START -->
 @RTK.md
+<!-- HARNESS_RTK_END -->
 
 <!-- CODEGRAPH_START -->
 ## CodeGraph
