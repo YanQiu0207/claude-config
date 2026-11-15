@@ -132,11 +132,13 @@ LLM 经常默默选择一种解释然后执行。这个原则强制明确推理�
 - 何时写：问题修复并验证后，或审核通过的结论，主动提议沉淀；经用户确认、泛化和脱敏后，按写入规则写入 `domains/` 或 `issues/`，未确认前不写入。
 - 新结论推翻旧条目时不删除旧条目：将其 `status` 改为 `superseded`，并填写 `superseded_by`。
 
-## 跨会话记忆（TencentDB Agent Memory）
+## 跨会话记忆（causal-memory MCP）
 
-- Claude Code 与 Codex 共用同一记忆库：Codex 经 memory proxy 自动注入与记录；Claude Code 每次提问由 hook 自动召回相关记忆，写入需手动调用 `memory_capture`。
+- Claude Code 与 Codex 共用同一记忆库（`CAUSAL_MEMORY_DB=C:/Users/YanQi/.local/share/causal-memory/causal.db`），只在 Agent 显式调用时写入，不自动记录对话。
+- 读：做非平凡决策（架构、排查思路、选型、部署）前调用 `search_memory`；执行不可逆或高风险操作前调用 `intervention_query`；遇到意外失败时调用 `trace_cause` / `trace_cause_chain`。
+- 写：行动且观察到结果、并经验证后，调用 `record_decision`（`decision` / `outcome` / `relation` / `task_tag` / `context`），踩坑与出乎意料的结果优先记录；稳定事实用 `record_fact`。不记录密钥、凭据或未经验证的结论。
+- 已记录的教训被证伪时，调用 `invalidate_decision`，不要另记一条相反结论。
 - 召回内容仅供参考，当前代码、配置、测试与运行证据优先。
-- 问题修复并验证后，调用 `memory_capture` 记录：现象、根因、错误做法及后果、正确做法；不记录密钥、凭据或未经验证的结论。
 
 ## 联网搜索
 
