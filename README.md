@@ -68,7 +68,7 @@ Skills 运行时引用的规范和知识库文件，安装对应 skill 时需一
 
 ## 全局指令（CLAUDE.md）
 
-Claude Code 的全局行为配置，涵盖：沟通方式（统一称用户为「老板」、默认中文并用直角引号、简洁直接先结论后证据、事实性内容须有可靠来源且不确定时明确说明）、通用代码风格（4 空格缩进、工具脚本用 Python 3）、中文 Markdown 排版规范（新增或改写前须按 `md-zh` 规则自检：中英文空格、中文与数字空格、全角标点、专有名词大小写）、编程规则（编码前不假设不隐藏困惑、简洁优先、精准修改只碰必须碰的、目标驱动执行循环验证、架构知识沉淀）、Claude Code 专属（Claude Code 知识点默认写入 `~/.claude/claude_ref/claude-code-guide.md`、行为规则区分全局与项目的持久化位置、创建或修改技能时先调用 `cc-adv-guide`）、跨项目共用知识库（`E:/work/shared-knowledge-base`）、跨会话记忆（causal-memory MCP，Claude Code 与 Codex 共用记忆库，仅在 Agent 显式调用时读写：决策前 `search_memory`、高风险操作前 `intervention_query`、验证后 `record_decision` / `record_fact`）、联网搜索优先用 `anysearch` skill、RTK 命令代理（`@RTK.md`，该文件不在本仓库中）、CodeGraph（仓库存在 `.codegraph/` 时优先用其定位代码）。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
+Claude Code 的全局行为配置，涵盖：沟通方式（统一称用户为「老板」、默认中文并用直角引号、简洁直接先结论后证据、事实性内容须有可靠来源且不确定时明确说明）、通用代码风格（4 空格缩进、工具脚本用 Python 3）、中文 Markdown 排版规范（新增或改写前须按 `md-zh` 规则自检：中英文空格、中文与数字空格、全角标点、专有名词大小写）、编程规则（编码前不假设不隐藏困惑、简洁优先（仅在系统边界校验，不为让测试通过而硬编码或特判）、精准修改只碰必须碰的、目标驱动执行循环验证、架构知识沉淀）、Claude Code 专属（Claude Code 知识点默认写入 `~/.claude/claude_ref/claude-code-guide.md`、行为规则区分全局与项目的持久化位置、创建或修改技能时先调用 `cc-adv-guide`）、跨项目共用知识库（`E:/work/shared-knowledge-base`）、跨会话记忆（causal-memory MCP，Claude Code 与 Codex 共用记忆库，仅在 Agent 显式调用时读写：决策前 `search_memory`、高风险操作前 `intervention_query`、验证后 `record_decision` / `record_fact`）、联网搜索优先用 `anysearch` skill、RTK 命令代理（`@RTK.md`，该文件不在本仓库中）、CodeGraph（仓库存在 `.codegraph/` 时优先用其定位代码）。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
 
 ## 目录结构
 
@@ -160,6 +160,8 @@ batch-md-lint ──── md-lint-worker (agent)
 
 resume-reviewing ── resume-reviewer (agent)
 
+fuwari-post-worker (agent) ── fuwari-post (skill，非本仓库)
+
 code-review-local ─┬── reviewer-compliance (agent)
                    ├── reviewer-bug (agent)
                    ├── reviewer-security (agent)
@@ -198,7 +200,7 @@ pdf2md ──────────────── （独立，无依赖）
 
 project-launch-audit ── （独立，无依赖）
 
-qiaomu-anything-to-notebooklm ── （独立，无依赖）
+qiaomu-anything-to-notebooklm ── notebooklm（外部 skill，非本仓库）
 
 skill-del ───────────── （独立，无依赖）
 
@@ -227,9 +229,10 @@ standards-reviewer
 - `code-review-local` 通过 5 个 reviewer agent 并行审查 CLAUDE.md 合规、bug、安全、质量、测试五个维度。
 - `english-learn` 依赖 `md-zh` skill（中文排版规范知识库）。
 - `md-zh`、`cc-adv-guide`、`google-cpp-naming` 为知识库型 skill，无依赖，由其他 skill 或 CLAUDE.md 引用调用。
-- `fuwari-post-worker` 和 `kms-article-summarizer` 为独立 agent，对应的调度 skill（`batch-fuwari-post`、`kms-deep-search`）不在本仓库中。
+- `fuwari-post-worker` 和 `kms-article-summarizer` 为独立 agent，对应的调度 skill（`batch-fuwari-post`、`kms-deep-search`）不在本仓库中；`fuwari-post-worker` 另依赖 `fuwari-post` skill（同样不在本仓库）。
+- `qiaomu-anything-to-notebooklm` 上传阶段依赖外部 `notebooklm` skill（非本仓库）。
 - `skill-evolver` 依赖外部 plugin `skill-creator`（非本仓库 skill），运行时调用其 `grader`、`comparator`、`analyzer` 三个 agent。
-- 其余 skill（`ai-project-quality-audit`、`anysearch`、`bp-cola-ddd`、`browser-skill`、`code-reading-assistant`、`codex-self-update-psmodulepath-fix`、`download-source`、`handoff`、`learn-repo`、`md-img-local`、`open-code-review`、`pdf2md`、`project-launch-audit`、`qiaomu-anything-to-notebooklm`、`skill-del`、`skill-rename`）可独立使用。
+- 其余 skill（`ai-project-quality-audit`、`anysearch`、`bp-cola-ddd`、`browser-skill`、`code-reading-assistant`、`codex-self-update-psmodulepath-fix`、`download-source`、`handoff`、`learn-repo`、`md-img-local`、`open-code-review`、`pdf2md`、`project-launch-audit`、`skill-del`、`skill-rename`）可独立使用。
 
 ## 开发设置
 
