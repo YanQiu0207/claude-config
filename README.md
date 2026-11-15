@@ -11,9 +11,11 @@
 | **batch-md-fmt** | 批量对多个 Markdown 文件进行一站式标准化：先排版规范化，再网络图片本地化。 |
 | **batch-md-lint** | 批量检查多个 Markdown 文件的排版规范。 |
 | **bp-cola-ddd** | DDD 分层架构最佳实践（语言无关）。覆盖 adapter/application/domain/infrastructure 分层、gateway 边界、DTO 与领域对象分离、扩展点和实体建模。 |
+| **browser-skill** | Automate the user's logged-in Chromium browser via bsk CLI. |
 | **cc-adv-guide** | 【知识库】Claude Code 进阶指南，包含 Skills 与 Agents 的高级用法和设计模式。 |
 | **code-reading-assistant** | 仅当用户明确输入 `$code-reading-assistant` 或明确点名「代码解读助手」时使用；按 2 到 3 个关键角度解释代码片段或追踪函数实现。 |
 | **code-review-local** | 对本地代码目标（文件 / 目录 / 整个项目）进行多 agent 并行审核。 |
+| **codex-self-update-psmodulepath-fix** | 排查与修复 Codex CLI Windows 自更新（codex update / install.ps1）报「Get-FileHash 无法识别」的故障。 |
 | **download-source** | 多源内容下载工具：把任意 URL（含付费墙网页、微信公众号、X/Twitter、YouTube、小宇宙/喜马拉雅/B 站播客）或本地文件（PDF、EPUB、Word、PPT、Excel、图片、音频、ZIP、CSV/JSON/XML、Markdown）下载/转换为本地 Markdown 或字幕文件，统一落到 `E:/work/downloads/` 目录。 |
 | **english-learn** | 当用户给出一句英文并要求「解析、分析、拆句、提炼范式、总结句型、有没有套路、能不能用到其它地方」时触发。 |
 | **google-cpp-naming** | 【知识库】Google C++ 命名规范。生成、修改、审查或解释 C++ 代码时，如用户要求 Google C++ 风格，或需要统一 class、struct、变量、成员、常量、函数、namespace、enum、template 参数、macro 的命名风格时启用。 |
@@ -62,11 +64,11 @@ Skills 运行时引用的规范和知识库文件，安装对应 skill 时需一
 | 文件 | 说明 | 被引用方 |
 |------|------|----------|
 | **markdown-zh.md** | 中文文案排版指南，定义中英混排、标点、空格等规范。 | 无直接引用（`md-zh` skill 自包含相同规范，不读取本文件） |
-| **claude-code-guide.md** | Claude Code 使用技巧汇总，供 CLAUDE.md 中的知识库查询指令引用。 | CLAUDE.md |
+| **claude-code-guide.md** | Claude Code 使用技巧汇总，CLAUDE.md 规定 Claude Code 知识点默认写入此文件。 | CLAUDE.md |
 
 ## 全局指令（CLAUDE.md）
 
-Claude Code 的全局行为配置，涵盖：沟通方式（统一称用户为「老板」、默认中文并用直角引号、简洁直接先结论后证据、事实性内容须有可靠来源且不确定时明确说明）、通用代码风格（4 空格缩进、工具脚本用 Python 3）、中文 Markdown 排版规范（新增或改写前须按 `md-zh` 规则自检：中英文空格、中文与数字空格、全角标点、专有名词大小写）、编程规则（编码前不假设不隐藏困惑、简洁优先、精准修改只碰必须碰的、目标驱动执行循环验证、架构知识沉淀）、Claude Code 专属（Claude Code 知识点默认写入 `~/.claude/claude_ref/claude-code-guide.md`、行为规则区分全局与项目的持久化位置、创建或修改技能时先调用 `cc-adv-guide`）、跨项目共用知识库（`E:/work/shared-knowledge-base`）、联网搜索优先用 `anysearch` skill、RTK 命令代理（`@RTK.md`）。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
+Claude Code 的全局行为配置，涵盖：沟通方式（统一称用户为「老板」、默认中文并用直角引号、简洁直接先结论后证据、事实性内容须有可靠来源且不确定时明确说明）、通用代码风格（4 空格缩进、工具脚本用 Python 3）、中文 Markdown 排版规范（新增或改写前须按 `md-zh` 规则自检：中英文空格、中文与数字空格、全角标点、专有名词大小写）、编程规则（编码前不假设不隐藏困惑、简洁优先、精准修改只碰必须碰的、目标驱动执行循环验证、架构知识沉淀）、Claude Code 专属（Claude Code 知识点默认写入 `~/.claude/claude_ref/claude-code-guide.md`、行为规则区分全局与项目的持久化位置、创建或修改技能时先调用 `cc-adv-guide`）、跨项目共用知识库（`E:/work/shared-knowledge-base`）、跨会话记忆（TencentDB Agent Memory，问题修复验证后手动 `memory_capture`）、联网搜索优先用 `anysearch` skill、RTK 命令代理（`@RTK.md`，该文件不在本仓库中）、CodeGraph（仓库存在 `.codegraph/` 时优先用其定位代码）。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
 
 ## 目录结构
 
@@ -136,6 +138,13 @@ cp -r claude-config/skills/md-zh ~/.claude/skills/
 ## 依赖关系
 
 ```text
+CLAUDE.md ──────┬── md-zh (skill)
+                ├── cc-adv-guide (skill)
+                ├── anysearch (skill)
+                └── claude_ref/claude-code-guide.md (参考文件)
+
+claude_ref/markdown-zh.md ── （无直接引用方）
+
 md-fmt ─────────┬── md-lint (skill)
                 └── md-img-local (skill)
 
@@ -169,7 +178,11 @@ anysearch ─────────── （独立，无依赖）
 
 bp-cola-ddd ───────── （独立，无依赖）
 
+browser-skill ────────── （独立，无依赖）
+
 code-reading-assistant ── （独立，无依赖）
+
+codex-self-update-psmodulepath-fix ── （独立，无依赖）
 
 download-source ─────── （独立，无依赖）
 
@@ -216,7 +229,7 @@ standards-reviewer
 - `md-zh`、`cc-adv-guide`、`google-cpp-naming` 为知识库型 skill，无依赖，由其他 skill 或 CLAUDE.md 引用调用。
 - `fuwari-post-worker` 和 `kms-article-summarizer` 为独立 agent，对应的调度 skill（`batch-fuwari-post`、`kms-deep-search`）不在本仓库中。
 - `skill-evolver` 依赖外部 plugin `skill-creator`（非本仓库 skill），运行时调用其 `grader`、`comparator`、`analyzer` 三个 agent。
-- 其余 skill（`ai-project-quality-audit`、`anysearch`、`bp-cola-ddd`、`code-reading-assistant`、`download-source`、`handoff`、`learn-repo`、`md-img-local`、`open-code-review`、`pdf2md`、`project-launch-audit`、`qiaomu-anything-to-notebooklm`、`skill-del`、`skill-rename`）可独立使用。
+- 其余 skill（`ai-project-quality-audit`、`anysearch`、`bp-cola-ddd`、`browser-skill`、`code-reading-assistant`、`codex-self-update-psmodulepath-fix`、`download-source`、`handoff`、`learn-repo`、`md-img-local`、`open-code-review`、`pdf2md`、`project-launch-audit`、`qiaomu-anything-to-notebooklm`、`skill-del`、`skill-rename`）可独立使用。
 
 ## 开发设置
 
