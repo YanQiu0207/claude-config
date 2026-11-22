@@ -29,31 +29,6 @@
 - 先定义怎样算完成：修 bug 时能写复现测试就先写；重构前后测试都要通过。不为让测试通过而硬编码或特判，测试本身有问题时说出来。
 - 汇报时区分已验证与未验证，不把未验证的能力当作已交付。
 
-### 架构知识沉淀
-
-**代码探索或 Q&A 结束后，若产出了模块级理解，主动询问是否落地到 `docs/arch-snapshots/<module>/`。若本次产出来自 codebase-researcher agent 调用，跳过——询问由 codebase-researcher 第五步负责。**
-
-触发条件（满足任意一条即询问）：
-- 回答问题需要大量读代码，且产出了模块整体概览（职责、边界、主要组件）
-- 梳理了跨模块的调用链或数据流
-- 发现了重要的设计模式或关键权衡
-
-**不询问**的情况：探索范围仅限单个文件内且未产出跨文件调用关系或模块级概览；已有快照且 `vcs_ref` 与当前版本库一致。
-
-询问时提示用户选择 track：
-- **structure track**（`structure.md`）：模块边界、接口、数据流——有时效性，版本库提交后失效
-- **insights track**（`insights.md`）：设计模式、关键权衡——长期有效；若涉及不可逆技术选型或影响多模块的约束，直接写 ADR，不经 insights track 中转
-
-落地前做 Overlap 检测（加载 project-knowledge skill 后执行）：
-- 获取 `vcs_ref`：git 仓库用 `git rev-parse HEAD`（写为 `git:<hash>`）；SVN 用 `svn info --show-item last-changed-revision`（写为 `svn:<revision>`）；无版本控制写 `N/A`
-- 已有文件且 `vcs_ref` 与当前一致 → 自动跳过
-- 已有文件但 `vcs_ref` 已过期或为 `N/A` → 询问「更新 / 跳过」
-- 无文件 → 直接写入
-
-**用户确认后方可写入，不自动写入。** frontmatter 必填字段：`module`、`vcs_ref`、`generated_at`、`track`、`expires_hint`。
-
-**编码时永远以代码为准，快照仅为导航工具。**
-
 ## Claude Code 专属
 
 ### 记忆与知识写入规则
