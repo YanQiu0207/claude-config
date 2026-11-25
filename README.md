@@ -68,7 +68,7 @@ Skills 运行时引用的规范和知识库文件，安装对应 skill 时需一
 
 ## 全局指令（CLAUDE.md）
 
-Claude Code 的全局行为配置，涵盖：沟通方式（统一称用户为「老板」、默认中文并用直角引号、简洁直接先结论后证据、事实性内容须有可靠来源且不确定时明确说明）、通用代码风格（4 空格缩进、工具脚本用 Python 3）、中文 Markdown 排版规范（新增或改写前须按 `md-zh` 规则自检：中英文空格、中文与数字空格、全角标点、专有名词大小写）、编程规则（编码与交付：先读懂代码与调用方、需求有歧义且选错代价高时先问否则选可逆假设并说明、只做任务需要的改动且不顺手改相邻代码、先定义完成标准且不为让测试通过而硬编码或特判、汇报区分已验证与未验证）、Claude Code 专属（Claude Code 知识点默认写入 `~/.claude/claude_ref/claude-code-guide.md`、行为规则区分全局与项目的持久化位置、创建或修改技能时先调用 `cc-adv-guide`）、跨项目共用知识库（`E:/work/shared-knowledge-base`）、跨会话记忆（causal-memory MCP，Claude Code 与 Codex 共用记忆库，仅在 Agent 显式调用时读写：决策前 `search_memory`、高风险操作前 `intervention_query`、验证后 `record_decision` / `record_fact`）、联网搜索优先用 `anysearch` skill、RTK 命令代理（`@RTK.md`，该文件不在本仓库中）、CodeGraph（仓库存在 `.codegraph/` 时优先用其定位代码）。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
+Claude Code 的全局行为配置，涵盖：沟通方式（统一称用户为「老板」、默认中文并用直角引号、默认简短、先结论后证据且不复述执行过程、已验证事实直接下结论不加修饰词、事实性内容须有可靠来源且不确定时一次说清不确定点与确认方式）、通用代码风格（4 空格缩进、工具脚本用 Python 3）、中文 Markdown 排版规范（新增或改写前须按 `md-zh` 规则自检：中英文空格、中文与数字空格、全角标点、专有名词大小写）、编程规则（编码与交付：先读懂代码与调用方、需求有歧义且选错代价高时先问否则选可逆假设并说明、能自行查证的先自查、一轮内推进到实现验证汇报、只做任务需要的改动且不顺手改相邻代码、先定义完成标准且不为让测试通过而硬编码或特判、汇报区分已验证与未验证）、Claude Code 专属（Claude Code 知识点默认写入 `~/.claude/claude_ref/claude-code-guide.md`、行为规则区分全局与项目的持久化位置、创建或修改技能时先调用 `cc-adv-guide`）、跨项目共用知识库（`E:/work/shared-knowledge-base`）、跨会话记忆（causal-memory MCP，Claude Code 与 Codex 共用记忆库，仅在 Agent 显式调用时读写：决策前 `search_memory`、高风险操作前 `intervention_query`、验证后 `record_decision` / `record_fact`）、联网搜索优先用 `anysearch` skill、RTK 命令代理（`@RTK.md`，该文件不在本仓库中）、CodeGraph（仓库存在 `.codegraph/` 时优先用其定位代码）。安装时注意不要覆盖本地已有的 `CLAUDE.md`，应手动合并。
 
 ## 目录结构
 
